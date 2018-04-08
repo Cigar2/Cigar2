@@ -505,6 +505,7 @@
         showSkins: true,
         showMinimap: true,
         showBorders: true,
+        showCoordinates: true,
         darkTheme: false,
         allowGETipSet: false
     };
@@ -1357,6 +1358,9 @@
     };
     wHandle.setBorders = function(a) {
         settings.showBorders = !a;
+    };
+    wHandle.setCoordinates = function(a) {
+        settings.showCoordinates = !a;
     };
     wHandle.spectate = function(a) {
         wsSend(UINT8_CACHE[1]);

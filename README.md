@@ -16,7 +16,7 @@ This is not done yet.
 
 ## New features
 - Borders
-- Changing skin no longer clears nickname
+- Seperate box for skin name
 - Auto-connect (specify it using `selected` in the select dropdown)
 - Zoomout limit lowered
 - Multi-cell minimap by [Tombez](https://github.com/Tombez)

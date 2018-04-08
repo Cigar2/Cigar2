@@ -5,6 +5,8 @@
     if (typeof WebSocket == "undefined" || typeof DataView == "undefined" || typeof ArrayBuffer == "undefined" || typeof Uint8Array == "undefined")
       return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
 
+    function byId(id) {return document.getElementById(id);}
+
     Date.now || (Date.now = function() {
         return (+new Date).getTime();
     });
@@ -191,7 +193,7 @@
     }
     function wsOpen() {
         disconnectDelay = 1000;
-        wjQuery("#connecting").hide();
+        byId('connecting').style.display = 'none';
         wsSend(SEND_254);
         wsSend(SEND_255);
         log.debug(`ws connected, using https: ${USE_HTTPS}`);
@@ -528,12 +530,12 @@
                 if (value && value == "true" && 0 != id) {
                     wjQuery(this).prop("checked", "true");
                     wjQuery(this).trigger("change");
-                } else if (id == 0 && value != null)
+                } else if ((id == 0 || id == 11) && value != null)
                     wjQuery(this).val(value);
             });
             wjQuery(".save").change(function() {
                 var id = wjQuery(this).data("box-id");
-                var value = (id == 0) ? wjQuery(this).val() : wjQuery(this).prop("checked");
+                var value = (id == 0 || id == 11) ? wjQuery(this).val() : wjQuery(this).prop("checked");
                 wHandle.localStorage.setItem("checkbox-" + id, value);
             });
         });
@@ -555,7 +557,7 @@
 
     function hideESCOverlay() {
         escOverlayShown = false;
-        wjQuery("#overlays").hide();
+        byId('overlays').style.display = 'none';
     }
     function showESCOverlay() {
         escOverlayShown = true;
@@ -731,6 +733,9 @@
         mainCtx.closePath();
         mainCtx.stroke();
         mainCtx.restore();
+    }
+    function drawPosition() {
+      
     }
     function drawMinimap() {
         if (border.centerX !== 0 || border.centerY !== 0 || !settings.showMinimap)
@@ -1366,7 +1371,7 @@
             var div = /ip=([\w\W]+):([0-9]+)/.exec(wHandle.location.search.slice(1))
             if (div) wsInit(`${div[1]}:${div[2]}`);
         }
-        setserver(document.getElementById('gamemode').options[document.getElementById('gamemode').selectedIndex].value);
+        wHandle.setserver(document.getElementById('gamemode').options[document.getElementById('gamemode').selectedIndex].value);
         window.requestAnimationFrame(drawGame);
     }
     wHandle.setserver = function(arg) {
@@ -1408,13 +1413,12 @@
         stats.maxScore = 0;
         hideESCOverlay();
     };
-    wHandle.play = function(a) {
-        sendPlay(a);
+    wHandle.play = function(a, b) {
+        sendPlay((!a ? b : '{'+a+'}'+b));
         hideESCOverlay();
     };
     wHandle.changeSkin = function(a) {
-      var changed = $("#nick").val().replace(/{.*}/, '{'+a+'}');
-      $('#nick').val((changed == $('#nick').val() ? '{'+a+'}' + (!$('#nick').val() ? '' : ' ') + $('#nick').val() : changed));
+      byId('skin').value = a;
     };
     wHandle.openSkinsList = function() {
         if (wjQuery("#inPageModalTitle").text() === "Skins") return;

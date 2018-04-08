@@ -55,9 +55,14 @@ html, body {
     float: left;
 }
 
-#gamemode {
+#skin {
     width: 33%;
     float: right;
+}
+
+#gamemode {
+    margin-top: 20px;
+    width: 100%;
 }
 
 #helloDialog {

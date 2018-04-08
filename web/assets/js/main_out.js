@@ -350,7 +350,7 @@
             case 0x63: // chat message
                 var flags = reader.getUint8();
                 var color = bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8());
-                
+
                 var name = reader.getStringUTF8().trim();
                 var reg = /\{([\w]+)\}/.exec(name);
                 if (reg) name = name.replace(reg[0], "").trim();
@@ -574,7 +574,7 @@
         scaleBack(ctx);
         ctx.translate(-mainCanvas.width / 2, -mainCanvas.height / 2);
     }
-    
+
     function drawChat() {
         if (chat.messages.length === 0 && settings.showChat)
             return chat.visible = false;
@@ -886,7 +886,7 @@
         cacheCleanup();
         wHandle.requestAnimationFrame(drawGame);
     }
-    
+
     function cellSort(a, b) {
         return a.s === b.s ? a.id - b.id : a.s - b.s;
     }
@@ -1023,7 +1023,7 @@
             if (this.destroyed)
                 ctx.globalAlpha = Math.max(200 - Date.now() + this.dead, 0) / 100;
             else ctx.globalAlpha = Math.min(Date.now() - this.born, 200) / 100;
-            
+
             if (!this.ejected && 20 < this.s)
                 ctx.stroke();
             ctx.fill();
@@ -1171,7 +1171,7 @@
             var width = 0;
             for (var i = 0; i < value.length; i++)
                 width += canvases[value[i]].width - 2 * cache.lineWidth;
-            
+
             ctx.scale(correctionScale, correctionScale);
             x /= correctionScale;
             y /= correctionScale;
@@ -1317,6 +1317,47 @@
             viewMult = Math.sqrt(Math.min(cH / 1080, cW / 1920));
         };
         wHandle.onresize();
+        var mobileStuff = document.getElementById("mobileStuff");
+        var touchpad = document.getElementById("touchpad");
+        var touchCircle = document.getElementById("touchCircle");
+        var touchSize = .2;
+        var touched = false;
+        wHandle.addEventListener("touchstart", function(event) {
+            if (!touched) {
+                touched = true;
+                mobileStuff.style.display = "block";
+            }
+            if (event.target.id == "splitBtn") {
+                wsSend(UINT8_CACHE[17]);
+            } else if (event.target.id == "ejectBtn") {
+                wsSend(UINT8_CACHE[21]);
+            } else {
+                touchmove(event);
+            }
+            touchCircle.style.display = "block";
+        });
+        var touchmove;
+        wHandle.addEventListener("touchmove", touchmove = function(event) {
+            var touch = event.touches[0];
+            var width = innerWidth * touchSize;
+            var height = innerHeight * touchSize;
+            if (touch.pageX < width && touch.pageY > innerHeight - height) {
+                mouseX = innerWidth / 2 + (touch.pageX - width / 2) * innerWidth / width;
+                mouseY = innerHeight / 2 + (touch.pageY - (innerHeight - height / 2)) * innerHeight / height;
+            } else {
+                mouseX = touch.pageX;
+                mouseY = touch.pageY;
+            }
+            var r = innerWidth * .02;
+            touchCircle.style.left = mouseX - r + "px";
+            touchCircle.style.top = mouseY - r + "px";
+        });
+        wHandle.addEventListener("touchend", function(event) {
+            if (event.touches.length === 0) {
+                touchCircle.style.display = "none";
+            }
+        });
+
         log.info(`init done in ${Date.now() - LOAD_START}ms`);
         gameReset();
         showESCOverlay();

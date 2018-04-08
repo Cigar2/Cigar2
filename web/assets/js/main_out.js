@@ -545,7 +545,7 @@
         data: { "action": "getSkins" },
         success: function(data) {
             var stamp = Date.now();
-            response = JSON.parse(data.names);
+            var response = JSON.parse(data.names);
             for (var i = 0; i < response.length; i++)
                 knownSkins[response[i]] = stamp;
             for (var i in knownSkins)
@@ -1201,7 +1201,7 @@
         mainCanvas.focus();
         function handleScroll(event) {
             mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
-            1 > mouseZ && (mouseZ = 1);
+            0.2 > mouseZ && (mouseZ = 0.2);
             mouseZ > 4 / mouseZ && (mouseZ = 4 / mouseZ);
         }
         if (/firefox/i.test(navigator.userAgent))
@@ -1366,7 +1366,7 @@
             var div = /ip=([\w\W]+):([0-9]+)/.exec(wHandle.location.search.slice(1))
             if (div) wsInit(`${div[1]}:${div[2]}`);
         }
-
+        setserver(document.getElementById('gamemode').options[document.getElementById('gamemode').selectedIndex].value);
         window.requestAnimationFrame(drawGame);
     }
     wHandle.setserver = function(arg) {

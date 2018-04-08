@@ -17,7 +17,10 @@ This is not done yet.
 ## New features
 - Borders
 - Changing skin no longer clears nickname
+- Auto-connect (specify it using `selected` in the select dropdown)
+- Zoomout limit lowered
 - Multi-cell minimap by [Tombez](https://github.com/Tombez)
+- Touch controls by [Tombez](https://github.com/Tombez)
 
 ### Todos
-Check out at [issue 1](https://github.com/Cigar2/Cigar2/issues/1)
+Check out [issue 1](https://github.com/Cigar2/Cigar2/issues/1)

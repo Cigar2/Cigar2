@@ -15,7 +15,7 @@ var skinsJson = JSON.stringify({names: JSON.stringify(skinNames)});
 var galleryHtml = '<link href="assets/css/gallery.css" rel="stylesheet"><div class="row center"><ul>' + skinNames.map(name => '<li class="skin" onclick="changeSkin($(this).find(\'.title\').text())" data-dismiss="modal"><div class="circular" style=\'background-image: url("' + './skins/' + name + '.png")\'></div><h4 class="title">' + name + '</h4></li>').join('') + '</ul></div>';
 
 app.post('/checkdir.php', function(req, res) {
-  if(req.xhr &&req.body.action == 'getSkins') {
+  if(req.xhr && req.body.action == 'getSkins') {
     res.send(skinsJson);
   }
 });

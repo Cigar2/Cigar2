@@ -1,0 +1,2 @@
+<link href="assets/css/gallery.css" rel="stylesheet"><div class="row center"><ul><?php $images=scandir("../skins/");
+  foreach($images as $curimg){if(strtolower(pathinfo($curimg,PATHINFO_EXTENSION)) == "png"){ ?><li class="skin" onclick="changeSkin($(this).find('.title').text())" data-dismiss="modal"><div class="circular" style='background-image: url("./skins/<?php echo $curimg ?>")'></div><h4 class="title"><?php echo pathinfo($curimg,PATHINFO_FILENAME); ?></h4></li><?php }} ?></ul></div>

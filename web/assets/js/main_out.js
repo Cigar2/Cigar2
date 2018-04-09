@@ -540,20 +540,24 @@
             });
         });
     }
-    wjQuery.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "checkdir.php",
-        data: { "action": "getSkins" },
-        success: function(data) {
-            var stamp = Date.now();
-            var response = JSON.parse(data.names);
-            for (var i = 0; i < response.length; i++)
-                knownSkins[response[i]] = stamp;
-            for (var i in knownSkins)
-                if (knownSkins[i] !== stamp) delete knownSkins[i];
-        }
-    });
+    if(typeof allSkins == 'undefined') {
+      wjQuery.ajax({
+          type: "POST",
+          dataType: "json",
+          url: "checkdir.php",
+          data: { "action": "getSkins" },
+          success: function(data) {
+              var stamp = Date.now();
+              var response = JSON.parse(data.names);
+              for (var i = 0; i < response.length; i++)
+                  knownSkins[response[i]] = stamp;
+              for (var i in knownSkins)
+                  if (knownSkins[i] !== stamp) delete knownSkins[i];
+          }
+      });
+    } else {
+      // soon
+    }
 
     function hideESCOverlay() {
         escOverlayShown = false;
@@ -1420,12 +1424,18 @@
     wHandle.changeSkin = function(a) {
       byId('skin').value = a;
     };
+    /* global allSkins */
     wHandle.openSkinsList = function() {
         if (wjQuery("#inPageModalTitle").text() === "Skins") return;
-        wjQuery.get("include/gallery.php").then(function(data) {
-            wjQuery("#inPageModalTitle").text("Skins");
-            wjQuery("#inPageModalBody").html(data);
-        });
+        wjQuery('#inPageModalTitle').text('Skins');
+        if(typeof allSkins == 'undefined') {
+          wjQuery.get("include/gallery.php").then(function(data) {
+              wjQuery("#inPageModalBody").html(data);
+          });
+        } else {
+          var galleryHtml = '<link href="assets/css/gallery.css" rel="stylesheet"><div class="row center"><ul>' + allSkins.map(name => '<li class="skin" onclick="changeSkin($(this).find(\'.title\').text())" data-dismiss="modal"><div class="circular" style=\'background-image: url("' + './skins/' + name + '.png")\'></div><h4 class="title">' + name + '</h4></li>').join('') + '</ul></div>';
+          byId('inPageModalBody').innerHTML = galleryHtml;
+        }
     };
     wHandle.onload = init;
 })(window, window.jQuery);

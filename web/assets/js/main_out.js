@@ -1,5 +1,5 @@
 (function(wHandle, wjQuery) {
-    // var allSkins = ['doge', 'pokerface'];
+     var allSkins = ['doge', 'pokerface'];
 
     if (navigator.appVersion.indexOf("MSIE") != -1)
 	    alert("You're using a pretty old browser, some parts of the website might not work properly.");
@@ -558,11 +558,9 @@
           }
       });
     } else {
-      var fakeJson = JSON.stringify({names: JSON.stringify(allSkins)});
       var stamp = Date.now();
-      var response = JSON.parse(fakeJson.names);
-      for (var i = 0; i < response.length; i++)
-          knownSkins[response[i]] = stamp;
+      for (var i = 0; i < allSkins.length; i++)
+          knownSkins[allSkins[i]] = stamp;
       for (var i in knownSkins)
           if (knownSkins[i] !== stamp) delete knownSkins[i];
     }

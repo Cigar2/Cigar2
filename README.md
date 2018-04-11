@@ -1,5 +1,9 @@
 # Cigar2
 Protocol 6 Agar.io client (only for private servers) based on Cigar  
+Cigar2 is always under development but a new version will never be pushed with known bugs, however there may be unknown bugs but you can report these and they should get fixed as soon as possible. This basically means that the master branch is always stable and is ready-for-use :)
+
+### Adding servers
+Locate the select element in the index.html then add new entries, WARNING: only put selected in one of them!
 
 ### Based on
 - [Original Cigar](https://github.com/CigarProject/Cigar)
@@ -12,7 +16,10 @@ To use the PHP version of Cigar2 move the stuff inside the php folder to the web
 To use the Node.js version of Cigar2 edit the port variable located at the top of index.js then move all the files to your server, run `npm install` and then `node index.js`
 
 ### Static (for use in github.io etc.)
-Move the file in the static folder (skins.js) to web/assets/js, put all your skin names into the array in the file (WITHOUT .png), remove line 22 and 24 in index.html and then upload the content of the web folder to your static webpage hoster
+Remove `// ` from the 2nd line and put all your skin names into the array located at the same line in main_out.js (WITHOUT .png), and then upload the content of the web folder to your static webpage hoster
+
+### Uploading skins
+Upload them to the skins folder (if you use Node.js version then it is web/skins)
 
 ## New features
 - Borders

@@ -1,1 +1,0 @@
-var allSkins = ['doge', 'pokerface'];

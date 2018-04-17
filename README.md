@@ -22,6 +22,7 @@ Remove `// ` from the 2nd line and put all your skin names into the array locate
 Upload them to the skins folder (if you use Node.js version then it is web/skins)
 
 ## New features
+- Position/coordinates
 - Borders
 - Seperate box for skin name
 - Node.js server and static mode

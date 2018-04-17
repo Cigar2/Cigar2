@@ -508,8 +508,8 @@
         showColor: true,
         showSkins: true,
         showMinimap: true,
-        showBorders: true,
-        showPosition: true,
+        showBorders: false,
+        showPosition: false,
         darkTheme: false,
         allowGETipSet: false
     };
@@ -656,6 +656,26 @@
         for (var i = 0; i < rows.length; i++)
             ctx.fillText(rows[i], 2, -2 + i * (14 + 2));
     }
+
+    function drawPosition() {
+        if(!settings.showPosition) return console.log('Disabled');
+        var width = 200 * (border.width / border.height);
+        var height = 40 * (border.height / border.width);
+
+        var beginX = mainCanvas.width / viewMult - width;
+        var beginY = mainCanvas.height / viewMult - height;
+
+        if(settings.showMinimap) beginY = beginY - 10 - 200 * border.height / border.width;
+
+        mainCtx.fillStyle = "#000";
+        mainCtx.globalAlpha = 0.4;
+        mainCtx.fillRect(beginX, beginY, width, height);
+        mainCtx.globalAlpha = 1;
+
+        mainCtx.fillStyle = "#FFF";
+        drawRaw(mainCtx, beginX+width/2, beginY+height/2, 'X: ' + ~~cameraX + ', Y: ' + ~~cameraY);
+    }
+
     function prettyPrintTime(seconds) {
         seconds = ~~seconds;
         var minutes = ~~(seconds / 60);
@@ -744,14 +764,8 @@
         mainCtx.stroke();
         mainCtx.restore();
     }
-    function drawPosition() {
-      
-    }
     function drawMinimap() {
-        if (border.centerX !== 0 || border.centerY !== 0 || !settings.showMinimap)
-            // scramble level 2+ makes the minimap unusable
-            // and is detectable with a non-zero map center
-            return;
+        if (border.centerX !== 0 || border.centerY !== 0 || !settings.showMinimap) return;
         mainCtx.save();
         var targetSize = 200;
         var width = targetSize * (border.width / border.height);
@@ -895,6 +909,7 @@
             mainCtx.globalAlpha = 1;
         }
         drawMinimap();
+        drawPosition();
 
         mainCtx.restore();
 
@@ -1413,10 +1428,10 @@
         settings.showMinimap = !a;
     };
     wHandle.setBorders = function(a) {
-        settings.showBorders = !a;
+        settings.showBorders = a;
     };
     wHandle.setPosition = function(a) {
-        settings.showPosition = !a;
+        settings.showPosition = a;
     };
     wHandle.spectate = function(a) {
         wsSend(UINT8_CACHE[1]);

@@ -658,7 +658,7 @@
     }
 
     function drawPosition() {
-        if(!settings.showPosition) return console.log('Disabled');
+        if(!settings.showPosition) return;
         var width = 200 * (border.width / border.height);
         var height = 40 * (border.height / border.width);
 

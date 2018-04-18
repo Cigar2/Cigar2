@@ -1433,6 +1433,9 @@
     wHandle.setPosition = function(a) {
         settings.showPosition = a;
     };
+    wHandle.setshowGrid = function(a) {
+        settings.showGrid = !a;
+    };	
     wHandle.spectate = function(a) {
         wsSend(UINT8_CACHE[1]);
         stats.maxScore = 0;

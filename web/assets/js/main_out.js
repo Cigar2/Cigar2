@@ -1433,7 +1433,7 @@
     wHandle.setPosition = function(a) {
         settings.showPosition = a;
     };
-    wHandle.setshowGrid = function(a) {
+    wHandle.setShowGrid = function(a) {
         settings.showGrid = !a;
     };	
     wHandle.spectate = function(a) {
@@ -1448,7 +1448,6 @@
     wHandle.changeSkin = function(a) {
       byId('skin').value = a;
     };
-    /* global allSkins */
     wHandle.openSkinsList = function() {
         if (wjQuery("#inPageModalTitle").text() === "Skins") return;
         wjQuery('#inPageModalTitle').text('Skins');

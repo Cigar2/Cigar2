@@ -5,6 +5,8 @@ Cigar2 is always under development but a new version will never be pushed with k
 ### Adding servers
 Locate the select element in the index.html then add new entries, WARNING: only put selected in one of them!
 
+### [Recommended server, OgarII by Luka](https://github.com/Luka967/OgarII)
+
 ### Based on
 - [Original Cigar](https://github.com/CigarProject/Cigar)
 - [Forked Cigar](https://github.com/Luka967/Cigar)

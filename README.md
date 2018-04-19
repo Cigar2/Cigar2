@@ -2,6 +2,9 @@
 Protocol 6 Agar.io client (only for private servers) based on Cigar  
 Cigar2 is always under development but a new version will never be pushed with known bugs, however there may be unknown bugs but you can report these and they should get fixed as soon as possible. This basically means that the master branch is always stable and is ready-for-use :)
 
+### Making zoomout limit default
+Change both 0.2 to 1 at line 1234 in main_out.js, please note, the line number may change but you'll find it if you search for `function init()`
+
 ### Adding servers
 Locate the select element in the index.html then add new entries, WARNING: only put selected in one of them!
 

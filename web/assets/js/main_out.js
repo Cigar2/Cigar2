@@ -2,7 +2,7 @@
     // var allSkins = ['doge', 'pokerface'];
 
     if (navigator.appVersion.indexOf("MSIE") != -1)
-	    alert("You're using a pretty old browser, some parts of the website might not work properly.");
+        alert("You're using a pretty old browser, some parts of the website might not work properly.");
 
     if (typeof WebSocket == "undefined" || typeof DataView == "undefined" || typeof ArrayBuffer == "undefined" || typeof Uint8Array == "undefined")
       return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
@@ -1435,7 +1435,7 @@
     };
     wHandle.setShowGrid = function(a) {
         settings.showGrid = !a;
-    };	
+    };
     wHandle.spectate = function(a) {
         wsSend(UINT8_CACHE[1]);
         stats.maxScore = 0;

@@ -2,7 +2,7 @@
     // var allSkins = ['doge', 'pokerface'];
 
     if (navigator.appVersion.indexOf("MSIE") != -1)
-	    alert("You're using a pretty old browser, some parts of the website might not work properly.");
+        alert("You're using a pretty old browser, some parts of the website might not work properly.");
 
     if (typeof WebSocket == "undefined" || typeof DataView == "undefined" || typeof ArrayBuffer == "undefined" || typeof Uint8Array == "undefined")
       return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
@@ -234,6 +234,9 @@
                     killed = reader.getUint32();
                     if (!cells.byId.hasOwnProperty(killer) || !cells.byId.hasOwnProperty(killed))
                         continue;
+                    if (settings.sounds && cells.mine.includes(killer)) {
+                        (cells.byId[killed].s < 20 ? pelletSound : eatSound).play(parseFloat(volumeInput.value));
+                    }
                     cells.byId[killed].destroy(killer);
                 }
 
@@ -479,6 +482,7 @@
 
     var mainCanvas = null;
     var mainCtx = null;
+    var volumeInput;
     var knownSkins = { };
     var loadedSkins = { };
     var escOverlayShown = false;
@@ -511,7 +515,8 @@
         showBorders: false,
         showPosition: false,
         darkTheme: false,
-        allowGETipSet: false
+        allowGETipSet: false,
+        sounds: false
     };
     var pressed = {
         space: false,
@@ -523,6 +528,9 @@
         q: false,
         esc: false
     };
+
+    const eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
+    const pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
 
     if (null !== wHandle.localStorage) {
         wjQuery(window).load(function() {
@@ -1228,6 +1236,7 @@
         mainCanvas = document.getElementById("canvas");
         mainCtx = mainCanvas.getContext("2d");
         chatBox = document.getElementById("chat_textbox");
+        volumeInput = document.getElementById("volumeInput");
         mainCanvas.focus();
         function handleScroll(event) {
             mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
@@ -1435,7 +1444,11 @@
     };
     wHandle.setShowGrid = function(a) {
         settings.showGrid = !a;
-    };	
+    };
+    wHandle.setSounds = function(a) {
+        settings.sounds = a;
+        volumeInput.style.display = a ? "inline" : "none";
+    };
     wHandle.spectate = function(a) {
         wsSend(UINT8_CACHE[1]);
         stats.maxScore = 0;
@@ -1460,5 +1473,5 @@
           byId('inPageModalBody').innerHTML = galleryHtml;
         }
     };
-    wHandle.onload = init;
+    wHandle.addEventListener("DOMContentLoaded", init);
 })(window, window.jQuery);

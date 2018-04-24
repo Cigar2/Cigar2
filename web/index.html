@@ -19,6 +19,7 @@
     <link href="assets/css/index.css" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="./assets/js/Sound.js"></script>
     <script src="assets/js/main_out.js"></script>
 </head>
 
@@ -93,7 +94,11 @@
                         <label>
                             <input type="checkbox" class="save" data-box-id="10" onchange="setPosition($(this).is(':checked'));"> Show position</label>
                         <label>
-                            <input type="checkbox" class="save" data-box-id="12" onchange="setShowGrid($(this).is(':checked'));"> Hide grid</label>
+                            <input type="checkbox" class="save" data-box-id="11" onchange="setShowGrid($(this).is(':checked'));"> Hide grid</label>
+                        <label>
+                            <input type="checkbox" class="save" data-box-id="12" onchange="setSounds($(this).is(':checked'));"> Sounds
+                            <input type="range" min="0" max="1" step="any" id="volumeInput">
+                        </label>
                     </div>
                 </div>
             </form>

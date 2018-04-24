@@ -160,6 +160,13 @@ html, body {
     right: 0;
 }
 
+#volumeInput {
+    display: none;
+    width: 100px;
+    height: 18px;
+    vertical-align: middle;
+}
+
 .checkbox label {
     margin-right: 10px;
 }

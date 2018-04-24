@@ -531,8 +531,6 @@
 
     const eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
     const pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
-    window.eatSound = eatSound;
-    window.pelletSound = pelletSound;
 
     if (null !== wHandle.localStorage) {
         wjQuery(window).load(function() {

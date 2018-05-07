@@ -39,8 +39,8 @@
             <div class="form-group">
                 <input id="nick" class="form-control" placeholder="Nickname" maxlength="15">
                 <input id="skin" class="form-control"  placeholder="Skin Name">
-                <select id="gamemode" class="form-control" onchange="setserver($(this).val());" required>
-                    <option selected value="localhost:443">Local</option>
+                <select id="gamemode" class="form-control" onchange="setserver(this.value)" required>
+                    <option value="localhost:443" selected>Local</option>
                 </select>
             </div>
 

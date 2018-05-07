@@ -1,7 +1,5 @@
 (function() {
     "use strict";
-    // var allSkins = ['doge', 'pokerface'];
-
     if (navigator.appVersion.indexOf("MSIE") != -1)
         alert("You're using a pretty old browser, some parts of the website might not work properly.");
 

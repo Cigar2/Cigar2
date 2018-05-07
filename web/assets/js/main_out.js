@@ -1,13 +1,17 @@
-(function(wHandle, wjQuery) {
+(function() {
+    "use strict";
     // var allSkins = ['doge', 'pokerface'];
 
     if (navigator.appVersion.indexOf("MSIE") != -1)
         alert("You're using a pretty old browser, some parts of the website might not work properly.");
 
     if (typeof WebSocket == "undefined" || typeof DataView == "undefined" || typeof ArrayBuffer == "undefined" || typeof Uint8Array == "undefined")
-      return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
+        return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
 
-    function byId(id) {return document.getElementById(id);}
+    function byId(id, parent = document) {return parent.getElementById(id)}
+    function byClass(clss, parent = document) {
+        return parent.getElementsByClassName(clss);
+    }
 
     Date.now || (Date.now = function() {
         return (+new Date).getTime();
@@ -21,22 +25,34 @@
         if (i !== -1) this.splice(i, 1);
         return i !== -1;
     };
-    function bytesToColor(r, g, b) {
-        var r1 = ("00" + (~~r).toString(16)).slice(-2);
-        var g1 = ("00" + (~~g).toString(16)).slice(-2);
-        var b1 = ("00" + (~~b).toString(16)).slice(-2);
-        return `#${r1}${g1}${b1}`;
+    Element.prototype.hide = function() {
+        this.style.display = 'none';
+        this.style.opacity = 0;
+    };
+    Element.prototype.show = function() {
+        this.style.display = 'block';
+        var that = this;
+        setTimeout(function() {
+            that.style.opacity = 1;
+        }, 20);
+    };
+    function bytesToHex(r, g, b) {
+        return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
     }
     function colorToBytes(color) {
-        if (color.length === 4)
-            return { r: parseInt(color[1] + color[1], 16), g: parseInt(color[2] + color[2], 16), b: parseInt(color[3] + color[3], 16) };
-        else if (color.length === 7)
-            return { r: parseInt(color[1] + color[2], 16), g: parseInt(color[3] + color[4], 16), b: parseInt(color[5] + color[6], 16) };
-        throw new Error(`invalid color ${color}`);
+        var c = color.slice(1);
+        if (c.length === 3) c = c.split("").map(function(a) {return a + a});
+        if (c.length !== 6) throw new Error(`invalid color ${color}`);
+        var v = parseInt(c, 16);
+        return {
+            r: v >>> 16 & 255,
+            g: v >>> 8 & 255,
+            b: v & 255
+        };
     }
     function darkenColor(color) {
         var a = colorToBytes(color);
-        return bytesToColor(a.r * .9, a.g * .9, a.b * .9);
+        return bytesToHex(a.r * .9, a.g * .9, a.b * .9);
     }
     function cleanupObject(object) {
         for (var i in object)
@@ -148,15 +164,23 @@
     };
     var log = {
         verbosity: 4,
-        error: function(a) { if (log.verbosity <= 0) return; console.error(a); },
-        warn: function(a) { if (log.verbosity <= 1) return; console.warn(a); },
-        info: function(a) { if (log.verbosity <= 2) return; console.info(a); },
-        debug: function(a) { if (log.verbosity <= 3) return; console.debug(a); }
+        error: function() {
+            if (log.verbosity > 0) console.error.apply(null, arguments);
+        },
+        warn: function() {
+            if (log.verbosity > 1) console.warn.apply(null, arguments);
+        },
+        info: function() {
+            if (log.verbosity > 2) console.info.apply(null, arguments);
+        },
+        debug: function() {
+            if (log.verbosity > 3) console.debug.apply(null, arguments);
+        }
     };
 
     var wsUrl = null,
         SKIN_URL = "./skins/",
-        USE_HTTPS = "https:" == wHandle.location.protocol,
+        USE_HTTPS = "https:" == window.location.protocol,
         PI_2 = Math.PI * 2,
         SEND_254 = new Uint8Array([254, 6, 0, 0, 0]),
         SEND_255 = new Uint8Array([255, 1, 0, 0, 0]),
@@ -185,7 +209,7 @@
             log.debug("ws init on existing conn");
             wsCleanup();
         }
-        wjQuery("#connecting").show();
+        byId("connecting").style.display = "block";
         ws = new WebSocket(`ws${USE_HTTPS ? "s" : ""}://${wsUrl = url}`);
         ws.binaryType = "arraybuffer";
         ws.onopen = wsOpen;
@@ -198,7 +222,6 @@
         byId('connecting').style.display = 'none';
         wsSend(SEND_254);
         wsSend(SEND_255);
-        log.debug(`ws connected, using https: ${USE_HTTPS}`);
     }
     function wsError(error) {
         log.warn(error);
@@ -234,8 +257,8 @@
                     killed = reader.getUint32();
                     if (!cells.byId.hasOwnProperty(killer) || !cells.byId.hasOwnProperty(killed))
                         continue;
-                    if (settings.sounds && cells.mine.includes(killer)) {
-                        (cells.byId[killed].s < 20 ? pelletSound : eatSound).play(parseFloat(volumeInput.value));
+                    if (settings.playSounds && cells.mine.includes(killer)) {
+                        (cells.byId[killed].s < 20 ? pelletSound : eatSound).play(parseFloat(soundsVolume.value));
                     }
                     cells.byId[killed].destroy(killer);
                 }
@@ -253,7 +276,7 @@
                     updColor = !!(flags & 0x02);
                     updName = !!(flags & 0x08);
                     updSkin = !!(flags & 0x04);
-                    color = updColor ? bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8()) : null;
+                    color = updColor ? bytesToHex(reader.getUint8(), reader.getUint8(), reader.getUint8()) : null;
                     skin = updSkin ? reader.getStringUTF8() : null;
                     name = updName ? reader.getStringUTF8() : null;
 
@@ -356,7 +379,7 @@
                 break;
             case 0x63: // chat message
                 var flags = reader.getUint8();
-                var color = bytesToColor(reader.getUint8(), reader.getUint8(), reader.getUint8());
+                var color = bytesToHex(reader.getUint8(), reader.getUint8(), reader.getUint8());
 
                 var name = reader.getStringUTF8().trim();
                 var reg = /\{([\w]+)\}/.exec(name);
@@ -403,7 +426,7 @@
         wsSend(writer);
     }
     function sendPlay(name) {
-        log.debug("play trigger");
+        console.log(name);
         var writer = new Writer(true);
         writer.setUint8(0x00);
         writer.setStringUTF8(name);
@@ -482,7 +505,7 @@
 
     var mainCanvas = null;
     var mainCtx = null;
-    var volumeInput;
+    var soundsVolume;
     var knownSkins = { };
     var loadedSkins = { };
     var escOverlayShown = false;
@@ -500,23 +523,26 @@
     var mouseX = NaN;
     var mouseY = NaN;
     var mouseZ = 1;
+    var skinList = [];
 
     var settings = {
-        mobile: "createTouch" in document,
-        showMass: false,
-        showNames: true,
-        showLeaderboard: true,
-        showChat: true,
-        showGrid: true,
-        showTextOutline: true,
-        showColor: true,
+        nick: "",
+        skin: "",
+        gamemode: "localhost:443",
         showSkins: true,
-        showMinimap: true,
-        showBorders: false,
-        showPosition: false,
+        showNames: true,
         darkTheme: false,
-        allowGETipSet: false,
-        sounds: false
+        showColor: true,
+        showMass: false,
+        showTextOutline: true,
+        showChat: true,
+        showMinimap: true,
+        showPosition: false,
+        showBorder: false,
+        showGrid: true,
+        playSounds: false,
+        soundsVolume: 0.5,
+        moreZoom: false
     };
     var pressed = {
         space: false,
@@ -532,55 +558,23 @@
     const eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
     const pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
 
-    if (null !== wHandle.localStorage) {
-        wjQuery(window).load(function() {
-            wjQuery(".save").each(function() {
-                var id = wjQuery(this).data("box-id");
-                var value = wHandle.localStorage.getItem("checkbox-" + id);
-                if (value && value == "true" && 0 != id) {
-                    wjQuery(this).prop("checked", "true");
-                    wjQuery(this).trigger("change");
-                } else if ((id == 0 || id == 11) && value != null)
-                    wjQuery(this).val(value);
-            });
-            wjQuery(".save").change(function() {
-                var id = wjQuery(this).data("box-id");
-                var value = (id == 0 || id == 11) ? wjQuery(this).val() : wjQuery(this).prop("checked");
-                wHandle.localStorage.setItem("checkbox-" + id, value);
-            });
-        });
-    }
-    if(typeof allSkins == 'undefined') {
-      wjQuery.ajax({
-          type: "POST",
-          dataType: "json",
-          url: "checkdir.php",
-          data: { "action": "getSkins" },
-          success: function(data) {
-              var stamp = Date.now();
-              var response = JSON.parse(data.names);
-              for (var i = 0; i < response.length; i++)
-                  knownSkins[response[i]] = stamp;
-              for (var i in knownSkins)
-                  if (knownSkins[i] !== stamp) delete knownSkins[i];
-          }
-      });
-    } else {
-      var stamp = Date.now();
-      for (var i = 0; i < allSkins.length; i++)
-          knownSkins[allSkins[i]] = stamp;
-      for (var i in knownSkins)
-          if (knownSkins[i] !== stamp) delete knownSkins[i];
-    }
+    request("skinList.txt", function(data) {
+        var skins = data.split(",");
+        var stamp = Date.now();
+        for (var i = 0; i < skins.length; i++)
+            knownSkins[skins[i]] = stamp;
+        for (var i in knownSkins)
+            if (knownSkins[i] !== stamp) delete knownSkins[i];
+    });
 
     function hideESCOverlay() {
         escOverlayShown = false;
-        byId('overlays').style.display = 'none';
+        byId("overlays").hide();
     }
     function showESCOverlay() {
         escOverlayShown = true;
-        wjQuery("#overlays").fadeIn(300);
-    }
+        byId("overlays").show();
+    };
 
     function toCamera(ctx) {
         ctx.translate(mainCanvas.width / 2, mainCanvas.height / 2);
@@ -593,6 +587,73 @@
         ctx.translate(cameraX, cameraY);
         scaleBack(ctx);
         ctx.translate(-mainCanvas.width / 2, -mainCanvas.height / 2);
+    }
+
+    function initSetting(id, elm) {
+        switch (elm.tagName.toLowerCase()) {
+            case "input":
+                switch (elm.type.toLowerCase()) {
+                    case "range":
+                    case "text":
+                        elm.value = settings[id];
+                        elm.addEventListener("change", function() {
+                            settings[id] = elm.value;
+                        });
+                        break;
+                    case "checkbox":
+                        elm.checked = settings[id];
+                        elm.addEventListener("change", function() {
+                            settings[id] = elm.checked;
+                        });
+                        break;
+                }
+                break;
+            case "select":
+
+                break;
+        }
+    }
+    function loadSettings() {
+        var text = localStorage.getItem("settings");
+        if (text) {
+            var obj = JSON.parse(text);
+            for (var prop in obj)
+                if (settings.hasOwnProperty(prop))
+                    settings[prop] = obj[prop];
+        }
+        for (var id in settings) {
+            var elm = byId(id);
+            if (elm) {
+                initSetting(id, elm);
+            } else {
+                log.warn(`element for setting ${id} doesn't exist.`);
+            }
+        }
+    }
+    function storeSettings() {
+        localStorage.setItem("settings", JSON.stringify(settings));
+    }
+
+    function request(url, callback, method = "GET", type = "text") {
+        var req = new XMLHttpRequest();
+        req.onload = function() {
+            callback(this.response);
+        };
+        req.responseType = type;
+        req.open(method, url);
+        req.send();
+    }
+
+    function buildGallery() {
+        byId("gallery-body").innerHTML = `
+        <ul id="skinsUL">
+            ${Object.keys(knownSkins).sort().map(name => `
+                <li class="skin" onclick="changeSkin('${name}')">
+                    <img class="circular" src="${"./skins/" + name + ".png"}">
+                    <h4 class="skinName">${name}</h4>
+                </li>
+            `).join("\n")}
+        </ul>`;
     }
 
     function drawChat() {
@@ -673,7 +734,7 @@
         var beginX = mainCanvas.width / viewMult - width;
         var beginY = mainCanvas.height / viewMult - height;
 
-        if(settings.showMinimap) beginY = beginY - 10 - 200 * border.height / border.width;
+        if (settings.showMinimap) beginY = beginY - 10 - 200 * border.height / border.width;
 
         mainCtx.fillStyle = "#000";
         mainCtx.globalAlpha = 0.4;
@@ -753,7 +814,8 @@
         mainCtx.lineWidth = 1;
         mainCtx.strokeStyle = settings.darkTheme ? "#AAA" : "#000";
         mainCtx.globalAlpha = 0.2;
-        var step = 50, i;
+        var step = 50,
+            i,
             cW = mainCanvas.width / cameraZ, cH = mainCanvas.height / cameraZ,
             startLeft = (-cameraX + cW / 2) % step,
             startTop = (-cameraY + cH / 2) % step;
@@ -830,7 +892,7 @@
         }
         mainCtx.fill();
 
-        // draw name above user's pos if he has a cell on the screen
+        // draw name above user's pos if they have a cell on the screen
         var cell = null;
         for (var i = 0, l = cells.mine.length; i < l; i++)
             if (cells.byId.hasOwnProperty(cells.mine[i])) {
@@ -848,7 +910,7 @@
     }
 
     function drawBorders() {
-        if(!settings.showBorders) return;
+        if(!settings.showBorder) return;
         mainCtx.strokeStyle = '#0000ff';
         mainCtx.lineWidth = 20;
         mainCtx.lineCap = "round";
@@ -922,7 +984,7 @@
         mainCtx.restore();
 
         cacheCleanup();
-        wHandle.requestAnimationFrame(drawGame);
+        window.requestAnimationFrame(drawGame);
     }
 
     function cellSort(a, b) {
@@ -1043,6 +1105,7 @@
 
             ctx.beginPath();
             if (this.jagged) {
+                ctx.lineJoin = "miter";
                 var pointCount = 120;
                 var incremental = PI_2 / pointCount;
                 ctx.moveTo(this.x, this.y + this.s + 3);
@@ -1115,11 +1178,11 @@
 
     function drawTextOnto(canvas, ctx, text, size) {
         ctx.font = `${size}px Ubuntu`;
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2;
+        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0;
         canvas.width = ctx.measureText(text).width + 2 * ctx.lineWidth;
         canvas.height = 4 * size;
         ctx.font = `${size}px Ubuntu`;
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2;
+        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0;
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         ctx.fillStyle = "#FFF"
@@ -1132,7 +1195,7 @@
         ctx.font = `${size}px Ubuntu`;
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2;
+        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0;
         ctx.fillStyle = "#FFF"
         ctx.strokeStyle = "#000";
         (ctx.lineWidth !== 1) && ctx.strokeText(text, x, y);
@@ -1171,7 +1234,7 @@
         cachedMass[size] = {
             canvases: canvases,
             size: size,
-            lineWidth: settings.showTextOutline ? Math.max(~~(size / 10), 2) : 2,
+            lineWidth: settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0,
             accessTime: syncAppStamp
         };
         return cachedMass[size];
@@ -1231,106 +1294,117 @@
         }
         ctx.restore();
     }
+    function keydown(event) {
+        switch (event.keyCode) {
+            case 13: // enter
+                if (escOverlayShown) break;
+                if (!settings.showChat) break;
+                if (isTyping) {
+                    chatBox.blur();
+                    var chattxt = chatBox.value;
+                    if (chattxt.length > 0) sendChat(chattxt);
+                    chatBox.value = "";
+                } else chatBox.focus();
+                break;
+            case 32: // space
+                if (isTyping || escOverlayShown || pressed.space) break;
+                wsSend(UINT8_CACHE[17]);
+                pressed.space = true;
+                break;
+            case 87: // W
+                if (isTyping || escOverlayShown) break;
+                wsSend(UINT8_CACHE[21]);
+                pressed.w = true;
+                break;
+            case 81: // Q
+                if (isTyping || escOverlayShown || pressed.q) break;
+                wsSend(UINT8_CACHE[18]);
+                pressed.q = true;
+                break;
+            case 69: // E
+                if (isTyping || escOverlayShown || pressed.e) break;
+                wsSend(UINT8_CACHE[22]);
+                pressed.e = true;
+                break;
+            case 82: // R
+                if (isTyping || escOverlayShown || pressed.r) break;
+                wsSend(UINT8_CACHE[23]);
+                pressed.r = true;
+                break;
+            case 84: // T
+                if (isTyping || escOverlayShown || pressed.t) break;
+                wsSend(UINT8_CACHE[24]);
+                pressed.t = true;
+                break;
+            case 80: // P
+                if (isTyping || escOverlayShown || pressed.p) break;
+                wsSend(UINT8_CACHE[25]);
+                pressed.p = true;
+                break;
+            case 27: // esc
+                if (pressed.esc) break;
+                pressed.esc = true;
+                if (escOverlayShown) hideESCOverlay();
+                else showESCOverlay();
+                break;
+        }
+    }
+    function keyup(event) {
+        switch (event.keyCode) {
+            case 32: // space
+                pressed.space = false;
+                break;
+            case 87: // W
+                pressed.w = false;
+                break;
+            case 81: // Q
+                if (pressed.q) wsSend(UINT8_CACHE[19]);
+                pressed.q = false;
+                break;
+            case 69: // E
+                pressed.e = false;
+                break;
+            case 82: // R
+                pressed.r = false;
+                break;
+            case 84: // T
+                pressed.t = false;
+                break;
+            case 80: // P
+                pressed.p = false;
+                break;
+            case 27: // esc
+                pressed.esc = false;
+                break;
+        }
+    }
+    function handleScroll(event) {
+        if (event.target !== mainCanvas) return;
+        mouseZ *= event.deltaY > 0 ? 0.8 : 1.2;
+        mouseZ = Math.max(mouseZ, settings.moreZoom ? 0.08 : 1);
+        mouseZ = Math.min(mouseZ, 4);
+    }
 
     function init() {
         mainCanvas = document.getElementById("canvas");
         mainCtx = mainCanvas.getContext("2d");
-        chatBox = document.getElementById("chat_textbox");
-        volumeInput = document.getElementById("volumeInput");
+        chatBox = byId("chat_textbox");
+        soundsVolume = byId("soundsVolume");
         mainCanvas.focus();
-        function handleScroll(event) {
-            mouseZ *= Math.pow(.9, event.wheelDelta / -120 || event.detail || 0);
-            0.2 > mouseZ && (mouseZ = 0.2);
-            mouseZ > 4 / mouseZ && (mouseZ = 4 / mouseZ);
-        }
-        if (/firefox/i.test(navigator.userAgent))
-            document.addEventListener("DOMMouseScroll", handleScroll, false);
-        else
-            document.body.onmousewheel = handleScroll;
-        wHandle.onkeydown = function(event) {
-            switch (event.keyCode) {
-                case 13: // enter
-                    if (escOverlayShown) break;
-                    if (!settings.showChat) break;
-                    if (isTyping) {
-                        chatBox.blur();
-                        var chattxt = chatBox.value;
-                        if (chattxt.length > 0) sendChat(chattxt);
-                        chatBox.value = "";
-                    } else chatBox.focus();
-                    break;
-                case 32: // space
-                    if (isTyping || escOverlayShown || pressed.space) break;
-                    wsSend(UINT8_CACHE[17]);
-                    pressed.space = true;
-                    break;
-                case 87: // W
-                    if (isTyping || escOverlayShown) break;
-                    wsSend(UINT8_CACHE[21]);
-                    pressed.w = true;
-                    break;
-                case 81: // Q
-                    if (isTyping || escOverlayShown || pressed.q) break;
-                    wsSend(UINT8_CACHE[18]);
-                    pressed.q = true;
-                    break;
-                case 69: // E
-                    if (isTyping || escOverlayShown || pressed.e) break;
-                    wsSend(UINT8_CACHE[22]);
-                    pressed.e = true;
-                    break;
-                case 82: // R
-                    if (isTyping || escOverlayShown || pressed.r) break;
-                    wsSend(UINT8_CACHE[23]);
-                    pressed.r = true;
-                    break;
-                case 84: // T
-                    if (isTyping || escOverlayShown || pressed.t) break;
-                    wsSend(UINT8_CACHE[24]);
-                    pressed.t = true;
-                    break;
-                case 80: // P
-                    if (isTyping || escOverlayShown || pressed.p) break;
-                    wsSend(UINT8_CACHE[25]);
-                    pressed.p = true;
-                    break;
-                case 27: // esc
-                    if (pressed.esc) break;
-                    pressed.esc = true;
-                    if (escOverlayShown) hideESCOverlay();
-                    else showESCOverlay();
-                    break;
+
+        loadSettings();
+        window.addEventListener("beforeunload", storeSettings);
+        document.addEventListener("wheel", handleScroll, {passive: true});
+        byId("play-btn").addEventListener("click", function() {
+            if (settings.skin) {
+                sendPlay("{" + settings.skin + "}" + settings.nick);
+            } else {
+                sendPlay(settings.nick);
             }
-        };
-        wHandle.onkeyup = function(event) {
-            switch (event.keyCode) {
-                case 32: // space
-                    pressed.space = false;
-                    break;
-                case 87: // W
-                    pressed.w = false;
-                    break;
-                case 81: // Q
-                    if (pressed.q) wsSend(UINT8_CACHE[19]);
-                    pressed.q = false;
-                    break;
-                case 69: // E
-                    pressed.e = false;
-                    break;
-                case 82: // R
-                    pressed.r = false;
-                    break;
-                case 84: // T
-                    pressed.t = false;
-                    break;
-                case 80: // P
-                    pressed.p = false;
-                    break;
-                case 27: // esc
-                    pressed.esc = false;
-                    break;
-            }
-        };
+            hideESCOverlay();
+        });
+        window.onkeydown = keydown;
+        window.onkeyup = keyup;
         chatBox.onblur = function() {
             isTyping = false;
             drawChat();
@@ -1344,39 +1418,23 @@
             mouseY = event.clientY;
         };
         setInterval(function() {
-            // send mouse update
             sendMouseMove(
                 (mouseX - mainCanvas.width / 2) / cameraZ + cameraX,
                 (mouseY - mainCanvas.height / 2) / cameraZ + cameraY
             );
         }, 40);
-        wHandle.onresize = function() {
-            var cW = mainCanvas.width = wHandle.innerWidth,
-                cH = mainCanvas.height = wHandle.innerHeight;
+        window.onresize = function() {
+            var cW = mainCanvas.width = window.innerWidth,
+                cH = mainCanvas.height = window.innerHeight;
             viewMult = Math.sqrt(Math.min(cH / 1080, cW / 1920));
         };
-        wHandle.onresize();
-        var mobileStuff = document.getElementById("mobileStuff");
-        var touchpad = document.getElementById("touchpad");
-        var touchCircle = document.getElementById("touchCircle");
+        window.onresize();
+        var mobileStuff = byId("mobileStuff");
+        var touchpad = byId("touchpad");
+        var touchCircle = byId("touchCircle");
         var touchSize = .2;
         var touched = false;
-        wHandle.addEventListener("touchstart", function(event) {
-            if (!touched) {
-                touched = true;
-                mobileStuff.style.display = "block";
-            }
-            if (event.target.id == "splitBtn") {
-                wsSend(UINT8_CACHE[17]);
-            } else if (event.target.id == "ejectBtn") {
-                wsSend(UINT8_CACHE[21]);
-            } else {
-                touchmove(event);
-            }
-            touchCircle.style.display = "block";
-        });
-        var touchmove;
-        wHandle.addEventListener("touchmove", touchmove = function(event) {
+        var touchmove = function(event) {
             var touch = event.touches[0];
             var width = innerWidth * touchSize;
             var height = innerHeight * touchSize;
@@ -1390,88 +1448,57 @@
             var r = innerWidth * .02;
             touchCircle.style.left = mouseX - r + "px";
             touchCircle.style.top = mouseY - r + "px";
+        };
+        window.addEventListener("touchmove", touchmove);
+        window.addEventListener("touchstart", function(event) {
+            if (!touched) {
+                touched = true;
+                mobileStuff.style.display = "block";
+            }
+            if (event.target.id == "splitBtn") {
+                wsSend(UINT8_CACHE[17]);
+            } else if (event.target.id == "ejectBtn") {
+                wsSend(UINT8_CACHE[21]);
+            } else {
+                touchmove(event);
+            }
+            touchCircle.style.display = "block";
         });
-        wHandle.addEventListener("touchend", function(event) {
+        window.addEventListener("touchend", function(event) {
             if (event.touches.length === 0) {
                 touchCircle.style.display = "none";
             }
         });
 
-        log.info(`init done in ${Date.now() - LOAD_START}ms`);
         gameReset();
         showESCOverlay();
 
-        if (settings.allowGETipSet && wHandle.location.search) {
-            var div = /ip=([\w\W]+):([0-9]+)/.exec(wHandle.location.search.slice(1))
-            if (div) wsInit(`${div[1]}:${div[2]}`);
+        if (window.location.search) {
+            var div = /ip=([\w\W]+):([0-9]+)/.exec(window.location.search.slice(1))
+            if (div) wsInit(div[1] + ":" + div[2]);
         }
-        wHandle.setserver(document.getElementById('gamemode').options[document.getElementById('gamemode').selectedIndex].value);
+        window.setserver(byId("gamemode").selectedOptions[0].value);
         window.requestAnimationFrame(drawGame);
+        log.info(`init done in ${Date.now() - LOAD_START}ms`);
     }
-    wHandle.setserver = function(arg) {
+    window.setserver = function(arg) {
         if (wsUrl === arg) return;
         wsInit(arg);
     };
-    wHandle.setDarkTheme = function(a) {
-        settings.darkTheme = a;
-        drawStats();
-    };
-    wHandle.setShowMass = function(a) {
-        settings.showMass = a;
-    };
-    wHandle.setSkins = function(a) {
-        settings.showSkins = a;
-    };
-    wHandle.setColors = function(a) {
-        settings.showColor = !a;
-    };
-    wHandle.setNames = function(a) {
-        settings.showNames = a;
-        drawLeaderboard();
-    };
-    wHandle.setChatHide = function(a) {
-        settings.showChat = !a;
-        drawChat();
-    };
-    wHandle.setMinimap = function(a) {
-        settings.showMinimap = !a;
-    };
-    wHandle.setBorders = function(a) {
-        settings.showBorders = a;
-    };
-    wHandle.setPosition = function(a) {
-        settings.showPosition = a;
-    };
-    wHandle.setShowGrid = function(a) {
-        settings.showGrid = !a;
-    };
-    wHandle.setSounds = function(a) {
-        settings.sounds = a;
-        volumeInput.style.display = a ? "inline" : "none";
-    };
-    wHandle.spectate = function(a) {
+    window.spectate = function(a) {
         wsSend(UINT8_CACHE[1]);
         stats.maxScore = 0;
         hideESCOverlay();
     };
-    wHandle.play = function(a, b) {
-        sendPlay((!a ? b : '{'+a+'}'+b));
-        hideESCOverlay();
+    window.changeSkin = function(a) {
+        byId("skin").value = a;
+        settings.skin = a;
+        byId("gallery").hide();
     };
-    wHandle.changeSkin = function(a) {
-      byId('skin').value = a;
+    window.openSkinsList = function() {
+        buildGallery();
+        byId("skinsUL").style.height = window.innerHeight * 0.75 + "px";
+        byId("gallery").show();
     };
-    wHandle.openSkinsList = function() {
-        if (wjQuery("#inPageModalTitle").text() === "Skins") return;
-        wjQuery('#inPageModalTitle').text('Skins');
-        if(typeof allSkins == 'undefined') {
-          wjQuery.get("include/gallery.php").then(function(data) {
-              wjQuery("#inPageModalBody").html(data);
-          });
-        } else {
-          var galleryHtml = '<link href="assets/css/gallery.css" rel="stylesheet"><div class="row center"><ul>' + allSkins.map(name => '<li class="skin" onclick="changeSkin($(this).find(\'.title\').text())" data-dismiss="modal"><div class="circular" style=\'background-image: url("' + './skins/' + name + '.png")\'></div><h4 class="title">' + name + '</h4></li>').join('') + '</ul></div>';
-          byId('inPageModalBody').innerHTML = galleryHtml;
-        }
-    };
-    wHandle.addEventListener("DOMContentLoaded", init);
-})(window, window.jQuery);
+    window.addEventListener("DOMContentLoaded", init);
+})();

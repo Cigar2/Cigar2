@@ -194,7 +194,17 @@
             22: new Uint8Array([22]),
             23: new Uint8Array([23]),
             24: new Uint8Array([24]),
+            25: new Uint8Array([25]),
             254: new Uint8Array([254])
+        },
+        KEY_TO_CODE = {
+            " ": UINT8_CACHE[17],
+            "w": UINT8_CACHE[21],
+            "q": UINT8_CACHE[18],
+            "e": UINT8_CACHE[22],
+            "r": UINT8_CACHE[23],
+            "t": UINT8_CACHE[24],
+            "p": UINT8_CACHE[25]
         };
 
     function wsCleanup() {
@@ -528,7 +538,7 @@
     var settings = {
         nick: "",
         skin: "",
-        gamemode: "localhost:443",
+        gamemode: "",
         showSkins: true,
         showNames: true,
         darkTheme: false,
@@ -545,14 +555,14 @@
         moreZoom: false
     };
     var pressed = {
-        space: false,
-        w: false,
-        e: false,
-        r: false,
-        t: false,
-        p: false,
-        q: false,
-        esc: false
+        " ": false,
+        "w": false,
+        "e": false,
+        "r": false,
+        "t": false,
+        "p": false,
+        "q": false,
+        "escape": false
     };
 
     const eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
@@ -1295,88 +1305,31 @@
         ctx.restore();
     }
     function keydown(event) {
-        switch (event.keyCode) {
-            case 13: // enter
-                if (escOverlayShown) break;
-                if (!settings.showChat) break;
-                if (isTyping) {
-                    chatBox.blur();
-                    var chattxt = chatBox.value;
-                    if (chattxt.length > 0) sendChat(chattxt);
-                    chatBox.value = "";
-                } else chatBox.focus();
-                break;
-            case 32: // space
-                if (isTyping || escOverlayShown || pressed.space) break;
-                wsSend(UINT8_CACHE[17]);
-                pressed.space = true;
-                break;
-            case 87: // W
-                if (isTyping || escOverlayShown) break;
-                wsSend(UINT8_CACHE[21]);
-                pressed.w = true;
-                break;
-            case 81: // Q
-                if (isTyping || escOverlayShown || pressed.q) break;
-                wsSend(UINT8_CACHE[18]);
-                pressed.q = true;
-                break;
-            case 69: // E
-                if (isTyping || escOverlayShown || pressed.e) break;
-                wsSend(UINT8_CACHE[22]);
-                pressed.e = true;
-                break;
-            case 82: // R
-                if (isTyping || escOverlayShown || pressed.r) break;
-                wsSend(UINT8_CACHE[23]);
-                pressed.r = true;
-                break;
-            case 84: // T
-                if (isTyping || escOverlayShown || pressed.t) break;
-                wsSend(UINT8_CACHE[24]);
-                pressed.t = true;
-                break;
-            case 80: // P
-                if (isTyping || escOverlayShown || pressed.p) break;
-                wsSend(UINT8_CACHE[25]);
-                pressed.p = true;
-                break;
-            case 27: // esc
-                if (pressed.esc) break;
-                pressed.esc = true;
-                if (escOverlayShown) hideESCOverlay();
-                else showESCOverlay();
-                break;
+        var key = event.key.toLowerCase();
+        if (key == "enter") {
+            if (escOverlayShown || !settings.showChat) return;
+            if (isTyping) {
+                chatBox.blur();
+                var text = chatBox.value;
+                if (text.length > 0) sendChat(text);
+                chatBox.value = "";
+            } else chatBox.focus();
+        } else if (pressed[key]) {
+            return;
+        } else if (key == "escape") {
+            pressed[key] = true;
+            escOverlayShown ? hideESCOverlay() : showESCOverlay();
+        } else {
+            if (isTyping || escOverlayShown) return;
+            if (pressed.hasOwnProperty(key)) pressed[key] = true;
+            var code = KEY_TO_CODE[key];
+            if (code !== undefined) wsSend(code);
         }
     }
     function keyup(event) {
-        switch (event.keyCode) {
-            case 32: // space
-                pressed.space = false;
-                break;
-            case 87: // W
-                pressed.w = false;
-                break;
-            case 81: // Q
-                if (pressed.q) wsSend(UINT8_CACHE[19]);
-                pressed.q = false;
-                break;
-            case 69: // E
-                pressed.e = false;
-                break;
-            case 82: // R
-                pressed.r = false;
-                break;
-            case 84: // T
-                pressed.t = false;
-                break;
-            case 80: // P
-                pressed.p = false;
-                break;
-            case 27: // esc
-                pressed.esc = false;
-                break;
-        }
+        var key = event.key.toLowerCase();
+        if (pressed.hasOwnProperty(key)) pressed[key] = false;
+        if (key == "q") wsSend(UINT8_CACHE[19]);
     }
     function handleScroll(event) {
         if (event.target !== mainCanvas) return;

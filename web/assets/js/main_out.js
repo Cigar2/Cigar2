@@ -534,6 +534,8 @@
     var mouseY = NaN;
     var mouseZ = 1;
     var skinList = [];
+    var macroCooldown = 1000 / 7;
+    var macroIntervalID;
 
     var settings = {
         nick: "",
@@ -1324,12 +1326,16 @@
             if (pressed.hasOwnProperty(key)) pressed[key] = true;
             var code = KEY_TO_CODE[key];
             if (code !== undefined) wsSend(code);
+            if (key == "w") macroIntervalID = setInterval(function() {
+                wsSend(code);
+            }, macroCooldown);
         }
     }
     function keyup(event) {
         var key = event.key.toLowerCase();
         if (pressed.hasOwnProperty(key)) pressed[key] = false;
         if (key == "q") wsSend(UINT8_CACHE[19]);
+        if (key == "w") clearInterval(macroIntervalID);
     }
     function handleScroll(event) {
         if (event.target !== mainCanvas) return;

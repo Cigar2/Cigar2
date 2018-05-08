@@ -13,108 +13,74 @@
 
     <title>Cigar2</title>
 
-    <link id="favicon" rel="icon" type="image/png" href="assets/img/favicon.png" />
+    <link id="favicon" rel="icon" type="image/png" href="assets/img/favicon.png">
     <link href="https://fonts.googleapis.com/css?family=Ubuntu:700" rel="stylesheet" type="text/css">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/index.css" rel="stylesheet">
+    <link href="assets/css/gallery.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="./assets/js/Sound.js"></script>
     <script src="assets/js/main_out.js"></script>
 </head>
 
 <body>
-    <div class="modal fade" id="inPageModal" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 id="inPageModalTitle" class="modal-title">Failed to Load</h4>
-                </div>
-                <div id="inPageModalBody" class="modal-body">
-                    <p>Failed to load. Please check your connection!</p>
-                    <div class="center">
-                        <div class="loader"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
+    <div id="gallery" onclick="if (event.target == this) this.hide()" style="display: none;">
+        <div id="gallery-content">
+            <div id="gallery-header">Skins</div>
+            <div id="gallery-body"></div>
         </div>
     </div>
-    <div id="overlays">
+    <div id="overlays" style="display: none;">
         <div id="helloDialog">
-            <form role="form">
-                <div class="form-group">
-                    <h2 id="title">Cigar2</h2>
-                </div>
+            <div class="form-group">
+                <h2 id="title">Cigar2</h2>
+            </div>
 
-                <div class="form-group">
-                    <input id="nick" class="form-control save" data-box-id="0" placeholder="Nick" maxlength="15" />
-                    <input id="skin" class="form-control save" data-box-id="11" placeholder="Skin" /> <br>
-                    <select id="gamemode" class="form-control" onchange="setserver($(this).val());" required>
-                      <option selected value="127.0.0.1:443">Local</option>
-                    </select>
-                </div>
+            <div class="form-group">
+                <input id="nick" class="form-control" placeholder="Nickname" maxlength="15">
+                <input id="skin" class="form-control"  placeholder="Skin Name">
+                <select id="gamemode" class="form-control" onchange="setserver(this.value)" required>
+                    <option value="localhost:443" selected>Local</option>
+                </select>
+            </div>
 
-                <div class="form-group">
-                    <div class="mb-10">
-                        <a data-toggle="modal" data-target="#inPageModal" onclick="openSkinsList();" class="btn-primary btn btn-info" role="button" style="width: 100%;">Skins Gallery</a>
-                    </div>
+            <button id="play-btn" class="btn btn-play btn-primary btn-needs-server">Play</button>
+            <button id="spectate-btn" onclick="spectate()" class="btn btn-warning btn-spectate btn-needs-server glyphicon glyphicon-eye-open"></button>
+            <button id="gallery-btn" onclick="openSkinsList()" class="btn btn-play btn-primary btn-needs-server btn-info">Skins Gallery</button>
 
-                    <button type="button" id="play-btn" onclick="play(document.getElementById('skin').value, document.getElementById('nick').value); return false;" class="btn btn-play btn-primary btn-needs-server">Play</button>
-                    <button onclick="$('#settings, #instructions').toggle(); return false;" class="btn btn-info btn-settings" id="settings-btn"><i class="glyphicon glyphicon-cog"></i></button>
-                    <br clear="both" />
+            <div id="settings" class="checkbox">
+                <div style="margin: 6px;">
+                    <label><input id="showSkins" type="checkbox">Skins</label>
+                    <label><input id="showNames" type="checkbox">Names</label>
+                    <label><input id="darkTheme" type="checkbox">Dark</label>
+                    <label><input id="showColor" type="checkbox">Color</label>
+                    <label><input id="showMass" type="checkbox">Mass</label>
+                    <label><input id="showChat" type="checkbox">Chat</label>
+                    <label><input id="showMinimap" type="checkbox">Minimap</label>
+                    <label><input id="showPosition" type="checkbox">Position</label>
+                    <label><input id="showBorder" type="checkbox">Border</label>
+                    <label><input id="showGrid" type="checkbox">Grid</label>
+                    <label><input id="showTextOutline" type="checkbox">Text Outline</label>
+                    <label><input id="moreZoom" type="checkbox">Zoomout</label>
+                    <label>
+                        <input id="playSounds" type="checkbox">Sounds
+                        <input id="soundsVolume" type="range" min="0" max="1" step="any">
+                    </label>
                 </div>
-
-                <div id="settings" class="checkbox" style="display:none;">
-                    <div class="form-group" id="mainform">
-                        <button id="spectate-btn" onclick="spectate(); return false;" class="btn btn-warning btn-spectate btn-needs-server">Spectate
-                        </button>
-                        <br clear="both" />
-                    </div>
-                    <div style="margin: 6px;">
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="1" onchange="setSkins(!$(this).is(':checked'));"> No skins</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="2" onchange="setNames(!$(this).is(':checked'));"> No names</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="3" onchange="setDarkTheme($(this).is(':checked'));"> Dark theme</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="4" onchange="setColors($(this).is(':checked'));"> No colors</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="5" onchange="setShowMass($(this).is(':checked'));"> Show mass</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="7" onchange="setChatHide($(this).is(':checked'));"> Hide chat</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="8" onchange="setMinimap($(this).is(':checked'));"> Hide minimap</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="9" onchange="setBorders($(this).is(':checked'));"> Show borders</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="10" onchange="setPosition($(this).is(':checked'));"> Show position</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="11" onchange="setShowGrid($(this).is(':checked'));"> Hide grid</label>
-                        <label>
-                            <input type="checkbox" class="save" data-box-id="12" onchange="setSounds($(this).is(':checked'));"> Sounds
-                            <input type="range" min="0" max="1" step="any" id="volumeInput">
-                        </label>
-                    </div>
-                </div>
-            </form>
+            </div>
 
             <div id="instructions">
-                <hr/>
+                <hr>
                 <center>
                     <span class="text-muted">
-                        Move your mouse to control your cell<br/>
-                        Press <b>Space</b> to split<br/>
-                        Press <b>W</b> to eject some mass<br/>
+                        Move your mouse to control your cell<br>
+                        Press <b>Space</b> to split<br>
+                        Press <b>W</b> to eject some mass<br>
                     </span>
                 </center>
             </div>
 
-            <hr />
+            <hr>
             <div id="footer">
                 <span class="text-muted">Have fun!</span>
             </div>
@@ -123,23 +89,21 @@
     </div>
 
     <div id="connecting">
-        <div style="width: 350px; background-color: #FFFFFF; margin: 100px auto; border-radius: 15px; padding: 5px 15px 5px 15px;">
+        <div id="connecting-content">
             <h2>Connecting</h2>
             <p> If you cannot connect to the servers, check if you have some anti virus or firewall blocking the connection.</p>
         </div>
     </div>
 
-    <div id="mobileStuff">
+    <div id="mobileStuff" style="display: none;">
         <div id="touchpad"></div>
-        <div id="touchCircle"></div>
+        <div id="touchCircle" style="display: none;"></div>
         <img src="/assets/img/split.png" id="splitBtn">
         <img src="/assets/img/eject.png" id="ejectBtn">
     </div>
 
     <canvas id="canvas" width="800" height="600"></canvas>
-    <input type="text" id="chat_textbox" placeholder="Press enter to chat" maxlength="200" />
+    <input type="text" id="chat_textbox" placeholder="Press enter to chat" maxlength="200">
     <div style="font-family:'Ubuntu'">&nbsp;</div>
-
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 </body>
 </html>

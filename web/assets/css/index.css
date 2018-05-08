@@ -87,7 +87,18 @@ input[type=checkbox] {
     margin-bottom: 10px;
     margin-top: -10px;
 }
-#play-btn, #spectate-btn, #gallery-btn {
+#play-btn {
+    width: 85%;
+    margin-bottom: 10px;
+}
+#spectate-btn {
+    width: 13%;
+    float: right;
+}
+#play-btn, #spectate-button {
+    display: inline;
+}
+#gallery-btn {
     width: 100%;
     margin-bottom: 5px;
 }

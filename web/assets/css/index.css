@@ -13,9 +13,7 @@ input[type=checkbox] {
 }
 
 #overlays {
-    display: none;
     opacity: 0;
-    transition: opacity 0.5s ease 0s;
     position: absolute;
     left: 0;
     right: 0;
@@ -28,13 +26,19 @@ input[type=checkbox] {
     padding: 10px;
 }
 #connecting {
-    display: none;
     position: absolute;
     left: 0;
     right: 0;
     top: 0;
     bottom: 0;
     z-index: 100;
+}
+#connecting-content {
+    width: 350px;
+    background-color: #fff;
+    margin: 100px auto;
+    border-radius: 15px;
+    padding: 5px 15px;
 }
 #nick {
     width: 65%;
@@ -86,9 +90,6 @@ input[type=checkbox] {
 #play-btn, #spectate-btn, #gallery-btn {
     width: 100%;
     margin-bottom: 5px;
-}
-#mobileStuff {
-    display: none;
 }
 #touchpad, #touchCircle, #splitBtn, #ejectBtn {
     position: fixed;

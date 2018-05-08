@@ -24,15 +24,18 @@
         return i !== -1;
     };
     Element.prototype.hide = function() {
-        this.style.display = 'none';
-        this.style.opacity = 0;
+        this.style.display = "none";
+        if (this.style.opacity == 1) this.style.opacity = 0;
     };
-    Element.prototype.show = function() {
-        this.style.display = 'block';
+    Element.prototype.show = function(seconds) {
+        this.style.display = "";
         var that = this;
-        setTimeout(function() {
-            that.style.opacity = 1;
-        }, 20);
+        if (seconds) {
+            this.style.transition = `opacity ${seconds}s ease 0s`;
+            setTimeout(function() {
+                that.style.opacity = 1;
+            }, 20);
+        }
     };
     function bytesToHex(r, g, b) {
         return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
@@ -207,7 +210,7 @@
             log.debug("ws init on existing conn");
             wsCleanup();
         }
-        byId("connecting").style.display = "block";
+        byId("connecting").show(0.5);
         ws = new WebSocket(`ws${USE_HTTPS ? "s" : ""}://${wsUrl = url}`);
         ws.binaryType = "arraybuffer";
         ws.onopen = wsOpen;
@@ -217,7 +220,7 @@
     }
     function wsOpen() {
         disconnectDelay = 1000;
-        byId('connecting').style.display = 'none';
+        byId("connecting").hide();
         wsSend(SEND_254);
         wsSend(SEND_255);
     }
@@ -570,7 +573,7 @@
     }
     function showESCOverlay() {
         escOverlayShown = true;
-        byId("overlays").show();
+        byId("overlays").show(0.5);
     };
 
     function toCamera(ctx) {
@@ -1450,7 +1453,7 @@
         window.addEventListener("touchstart", function(event) {
             if (!touched) {
                 touched = true;
-                mobileStuff.style.display = "block";
+                mobileStuff.show();
             }
             if (event.target.id == "splitBtn") {
                 wsSend(UINT8_CACHE[17]);
@@ -1459,11 +1462,11 @@
             } else {
                 touchmove(event);
             }
-            touchCircle.style.display = "block";
+            touchCircle.show();
         });
         window.addEventListener("touchend", function(event) {
             if (event.touches.length === 0) {
-                touchCircle.style.display = "none";
+                touchCircle.hide();
             }
         });
 
@@ -1495,7 +1498,7 @@
     window.openSkinsList = function() {
         buildGallery();
         byId("skinsUL").style.height = window.innerHeight * 0.75 + "px";
-        byId("gallery").show();
+        byId("gallery").show(0.5);
     };
     window.addEventListener("DOMContentLoaded", init);
 })();

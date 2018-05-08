@@ -24,13 +24,13 @@
 </head>
 
 <body>
-    <div id="gallery" onclick="if (event.target == this) this.hide()">
+    <div id="gallery" onclick="if (event.target == this) this.hide()" style="display: none;">
         <div id="gallery-content">
             <div id="gallery-header">Skins</div>
             <div id="gallery-body"></div>
         </div>
     </div>
-    <div id="overlays">
+    <div id="overlays" style="display: none;">
         <div id="helloDialog">
             <div class="form-group">
                 <h2 id="title">Cigar2</h2>
@@ -89,15 +89,15 @@
     </div>
 
     <div id="connecting">
-        <div style="width: 350px; background-color: #FFFFFF; margin: 100px auto; border-radius: 15px; padding: 5px 15px 5px 15px;">
+        <div id="connecting-content">
             <h2>Connecting</h2>
             <p> If you cannot connect to the servers, check if you have some anti virus or firewall blocking the connection.</p>
         </div>
     </div>
 
-    <div id="mobileStuff">
+    <div id="mobileStuff" style="display: none;">
         <div id="touchpad"></div>
-        <div id="touchCircle"></div>
+        <div id="touchCircle" style="display: none;"></div>
         <img src="/assets/img/split.png" id="splitBtn">
         <img src="/assets/img/eject.png" id="ejectBtn">
     </div>

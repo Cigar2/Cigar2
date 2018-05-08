@@ -1381,7 +1381,7 @@
     function handleScroll(event) {
         if (event.target !== mainCanvas) return;
         mouseZ *= event.deltaY > 0 ? 0.8 : 1.2;
-        mouseZ = Math.max(mouseZ, settings.moreZoom ? 0.08 : 1);
+        mouseZ = Math.max(mouseZ, settings.moreZoom ? 0.1 : 1);
         mouseZ = Math.min(mouseZ, 4);
     }
 

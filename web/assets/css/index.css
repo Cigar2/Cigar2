@@ -89,6 +89,7 @@ input[type=checkbox] {
 #spectate-btn {
     width: 13%;
     float: right;
+    top: 0;
 }
 #play-btn, #spectate-button {
     display: inline;

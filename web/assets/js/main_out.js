@@ -547,7 +547,15 @@
         showColor: true,
         showMass: false,
         showTextOutline: true,
-        showChat: true,
+        _showChat: true,
+        get showChat() {
+            return this._showChat;
+        },
+        set showChat(a) {
+            var chat = byId("chat_textbox");
+            a ? chat.show() : chat.hide();
+            this._showChat = a;
+        },
         showMinimap: true,
         showPosition: false,
         showBorder: false,
@@ -634,7 +642,7 @@
                     settings[prop] = obj[prop];
         }
         for (var id in settings) {
-            var elm = byId(id);
+            var elm = byId(id.charAt(0)  == "_" ? id.slice(1) : id);
             if (elm) {
                 initSetting(id, elm);
             } else {

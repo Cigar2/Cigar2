@@ -997,7 +997,7 @@
         if (minionControlled) {
             mainCtx.font = "12px Ubuntu";
             mainCtx.fillStyle = "#eea236";
-            var text = "Warning: you are controlling a minion, press Q to switch back.";
+            var text = "You are controlling a minion, press Q to switch back.";
             mainCtx.fillText(text, 2, height + stats.canvas.height);
         }
 

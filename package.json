@@ -1,10 +1,10 @@
 {
   "name": "Cigar2",
   "version": "0.0.1",
-  "description": "Protocol 6 Agar.io Client",
-  "main": "index.js",
+  "description": "Protocol 6 Agar.io client for private servers",
+  "main": "webserver.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node webserver.js"
   },
   "dependencies": {
     "express": "^4.16.3"

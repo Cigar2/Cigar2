@@ -1085,8 +1085,10 @@
                 showESCOverlay();
             this.destroyed = true;
             this.dead = syncUpdStamp;
-            if (killerId && !this.diedBy)
+            if (killerId && !this.diedBy) {
                 this.diedBy = killerId;
+                this.updated = syncUpdStamp;
+            }
         },
         update: function(relativeTime) {
             var dt = (relativeTime - this.updated) / 120;
@@ -1097,8 +1099,9 @@
                 this.nx = cells.byId[this.diedBy].x;
                 this.ny = cells.byId[this.diedBy].y;
             }
-            this.x = this.ox + (this.nx - this.ox) * dt;
-            this.y = this.oy + (this.ny - this.oy) * dt;
+            var dt2 = this.diedBy ? dt * dt : dt;
+            this.x = this.ox + (this.nx - this.ox) * dt2;
+            this.y = this.oy + (this.ny - this.oy) * dt2;
             this.s = this.os + (this.ns - this.os) * dt;
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
@@ -1154,8 +1157,8 @@
             ctx.closePath();
 
             if (this.destroyed)
-                ctx.globalAlpha = Math.max(200 - Date.now() + this.dead, 0) / 100;
-            else ctx.globalAlpha = Math.min(Date.now() - this.born, 200) / 100;
+                ctx.globalAlpha = Math.max(120 - Date.now() + this.dead, 0) / 120;
+            else ctx.globalAlpha = Math.min(Date.now() - this.born, 120) / 120;
 
             if (!this.ejected && 20 < this.s)
                 ctx.stroke();

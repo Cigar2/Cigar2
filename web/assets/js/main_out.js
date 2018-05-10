@@ -994,14 +994,18 @@
         drawMinimap();
         drawPosition();
 
+        mainCtx.restore();
+
         if (minionControlled) {
+            mainCtx.save();
             mainCtx.font = "12px Ubuntu";
+            mainCtx.textAlign = "center";
+            mainCtx.textBaseline = "hanging";
             mainCtx.fillStyle = "#eea236";
             var text = "You are controlling a minion, press Q to switch back.";
-            mainCtx.fillText(text, 2, height + stats.canvas.height);
+            mainCtx.fillText(text, mainCanvas.width / 2, 5);
+            mainCtx.restore();
         }
-
-        mainCtx.restore();
 
         cacheCleanup();
         window.requestAnimationFrame(drawGame);

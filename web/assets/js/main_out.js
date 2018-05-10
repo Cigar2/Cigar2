@@ -1079,9 +1079,9 @@
                 this.nx = cells.byId[this.diedBy].x;
                 this.ny = cells.byId[this.diedBy].y;
             }
-            var dt4 = this.diedBy ? dt ** 4 : dt;
-            this.x = this.ox + (this.nx - this.ox) * dt4;
-            this.y = this.oy + (this.ny - this.oy) * dt4;
+            var dt2 = this.diedBy ? dt * dt : dt;
+            this.x = this.ox + (this.nx - this.ox) * dt2;
+            this.y = this.oy + (this.ny - this.oy) * dt2;
             this.s = this.os + (this.ns - this.os) * dt;
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;

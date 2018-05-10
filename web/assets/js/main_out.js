@@ -611,26 +611,26 @@
     }
 
     function initSetting(id, elm) {
+        function simpleAssignListen(id, elm, prop) {
+            if (settings[id] !== "") elm[prop] = settings[id];
+            elm.addEventListener("change", function() {
+                settings[id] = elm[prop];
+            });
+        }
         switch (elm.tagName.toLowerCase()) {
             case "input":
                 switch (elm.type.toLowerCase()) {
                     case "range":
                     case "text":
-                        elm.value = settings[id];
-                        elm.addEventListener("change", function() {
-                            settings[id] = elm.value;
-                        });
+                        simpleAssignListen(id, elm, "value");
                         break;
                     case "checkbox":
-                        elm.checked = settings[id];
-                        elm.addEventListener("change", function() {
-                            settings[id] = elm.checked;
-                        });
+                        simpleAssignListen(id, elm, "checked");
                         break;
                 }
                 break;
             case "select":
-
+                simpleAssignListen(id, elm, "value");
                 break;
         }
     }
@@ -1460,7 +1460,7 @@
             var div = /ip=([\w\W]+):([0-9]+)/.exec(window.location.search.slice(1))
             if (div) wsInit(div[1] + ":" + div[2]);
         }
-        window.setserver(byId("gamemode").selectedOptions[0].value);
+        window.setserver(byId("gamemode").value);
         window.requestAnimationFrame(drawGame);
         log.info(`init done in ${Date.now() - LOAD_START}ms`);
     }

@@ -522,6 +522,7 @@
     var isTyping = false;
     var chatBox = null;
     var mapCenterSet = false;
+    var minionControlled = false;
     var cameraX = 0;
     var cameraY = 0;
     var cameraZ = 1;
@@ -995,6 +996,17 @@
 
         mainCtx.restore();
 
+        if (minionControlled) {
+            mainCtx.save();
+            mainCtx.font = "12px Ubuntu";
+            mainCtx.textAlign = "center";
+            mainCtx.textBaseline = "hanging";
+            mainCtx.fillStyle = "#eea236";
+            var text = "You are controlling a minion, press Q to switch back.";
+            mainCtx.fillText(text, mainCanvas.width / 2, 5);
+            mainCtx.restore();
+        }
+
         cacheCleanup();
         window.requestAnimationFrame(drawGame);
     }
@@ -1329,6 +1341,7 @@
             if (key == "w") macroIntervalID = setInterval(function() {
                 wsSend(code);
             }, macroCooldown);
+            if (key == "q") minionControlled = !minionControlled;
         }
     }
     function keyup(event) {

@@ -1065,8 +1065,10 @@
                 showESCOverlay();
             this.destroyed = true;
             this.dead = syncUpdStamp;
-            if (killerId && !this.diedBy)
+            if (killerId && !this.diedBy) {
                 this.diedBy = killerId;
+                this.updated = syncUpdStamp;
+            }
         },
         update: function(relativeTime) {
             var dt = (relativeTime - this.updated) / 120;
@@ -1135,8 +1137,8 @@
             ctx.closePath();
 
             if (this.destroyed)
-                ctx.globalAlpha = Math.max(200 - Date.now() + this.dead, 0) / 100;
-            else ctx.globalAlpha = Math.min(Date.now() - this.born, 200) / 100;
+                ctx.globalAlpha = Math.max(120 - Date.now() + this.dead, 0) / 120;
+            else ctx.globalAlpha = Math.min(Date.now() - this.born, 120) / 120;
 
             if (!this.ejected && 20 < this.s)
                 ctx.stroke();

@@ -28,6 +28,7 @@
 }
 #gallery-body {
     display: flex;
+    min-height: 0;
 }
 #skinsUL {
     padding: 0;

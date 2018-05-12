@@ -7,29 +7,38 @@
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 201;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 #gallery-content {
-    color: #000;
     background: #fff;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
     max-height: 80%;
     max-width: 60%;
     border-radius: 15px;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
 #gallery-header {
     font-size: 26px;
+    background: #555;
+    color: #fff;
     text-align: center;
+}
+#gallery-body {
+    display: flex;
 }
 #skinsUL {
     padding: 0;
     margin: 0;
     padding-left: 10px;
-    overflow-y: scroll;
+    padding-top: 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 #skinsUL::-webkit-scrollbar {
     width: 12px;
@@ -46,38 +55,30 @@
     background: slategrey;
 }
 .skin {
-    display: inline-block;
     margin-right: 10px;
     margin-bottom: 10px;
-    width: 150px;
-    cursor: pointer;
-    padding: 3px;
+    list-style-type: none; /* removes bullet point */
 }
 .circular {
     width: 150px;
     height: 150px;
-    border-radius: 75px;
+    border-radius: 50%;
     background: url("../img/checkerboard.png");
     background-repeat: no-repeat;
     background-size: 150px 150px;
     box-shadow: 0 0 8px rgba(0, 0, 0, .8);
     cursor: pointer;
+    transition: all 0.2s;
+}
+.skinName {
+    text-align: center;
+    margin-bottom: 0;
+    transition: all 0.2s;
 }
 .circular:hover {
     box-shadow: 0 0 12px rgba(0, 0, 0, .8);
-    -webkit-box-shadow: 0 0 12px rgba(0, 0, 0, .8);
-    -moz-box-shadow: 0 0 12px rgba(0, 0, 0, .8);
-    -webkit-transition: all 0.2s linear;
-    -o-transition: all 0.2s linear;
-    -moz-transition: all 0.2s linear;
-    -ms-transition: all 0.2s linear;
-    transition: all 0.2s linear;
+
 }
 .circular:hover + .skinName {
-    text-shadow: 0 0 2px rgba(0, 0, 0, .8);
-    -webkit-transition: all 0.2s linear;
-    -o-transition: all 0.2s linear;
-    -moz-transition: all 0.2s linear;
-    -ms-transition: all 0.2s linear;
-    transition: all 0.2s linear;
+    text-shadow: 0 0 1px rgba(0, 0, 0, .8);
 }

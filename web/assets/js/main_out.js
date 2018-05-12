@@ -1480,7 +1480,6 @@
     };
     window.openSkinsList = function() {
         buildGallery();
-        byId("skinsUL").style.height = window.innerHeight * 0.75 + "px";
         byId("gallery").show(0.5);
     };
     window.addEventListener("DOMContentLoaded", init);

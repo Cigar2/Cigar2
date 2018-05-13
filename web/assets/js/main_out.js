@@ -6,9 +6,9 @@
     if (typeof WebSocket == "undefined" || typeof DataView == "undefined" || typeof ArrayBuffer == "undefined" || typeof Uint8Array == "undefined")
         return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
 
-    function byId(id, parent = document) {return parent.getElementById(id)}
-    function byClass(clss, parent = document) {
-        return parent.getElementsByClassName(clss);
+    function byId(id, parent) {return (parent || document).getElementById(id)}
+    function byClass(clss, parent) {
+        return (parent || document).getElementsByClassName(clss);
     }
 
     Date.now || (Date.now = function() {
@@ -31,19 +31,27 @@
         this.style.display = "";
         var that = this;
         if (seconds) {
-            this.style.transition = `opacity ${seconds}s ease 0s`;
+            this.style.transition = "opacity " + seconds + "s ease 0s";
             setTimeout(function() {
                 that.style.opacity = 1;
             }, 20);
         }
     };
+    if (!Array.prototype.hasOwnProperty("includes")) { // IE fix
+        Array.prototype.includes = function(val) {
+            for (var i = 0; i < this.length; i++) {
+                if (this[i] === val) return true;
+            }
+            return false;
+        };
+    }
     function bytesToHex(r, g, b) {
         return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
     }
     function colorToBytes(color) {
         var c = color.slice(1);
         if (c.length === 3) c = c.split("").map(function(a) {return a + a});
-        if (c.length !== 6) throw new Error(`invalid color ${color}`);
+        if (c.length !== 6) throw new Error("invalid color " + color);
         var v = parseInt(c, 16);
         return {
             r: v >>> 16 & 255,
@@ -205,6 +213,10 @@
             "r": UINT8_CACHE[23],
             "t": UINT8_CACHE[24],
             "p": UINT8_CACHE[25]
+        },
+        IE_KEYS = {
+            "spacebar": " ",
+            "esc": "escape"
         };
 
     function wsCleanup() {
@@ -221,7 +233,7 @@
             wsCleanup();
         }
         byId("connecting").show(0.5);
-        ws = new WebSocket(`ws${USE_HTTPS ? "s" : ""}://${wsUrl = url}`);
+        ws = new WebSocket("ws" + (USE_HTTPS ? "s" : "") + "://" + (wsUrl = url));
         ws.binaryType = "arraybuffer";
         ws.onopen = wsOpen;
         ws.onmessage = wsMessage;
@@ -238,7 +250,7 @@
         log.warn(error);
     }
     function wsClose(e) {
-        log.debug(`ws disconnected ${e.code} '${e.reason}'`);
+        log.debug("ws disconnected " + e.code + " '" + e.reason + "'");
         wsCleanup();
         gameReset();
         setTimeout(function() {
@@ -575,8 +587,8 @@
         "escape": false
     };
 
-    const eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
-    const pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
+    var eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
+    var pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
 
     request("skinList.txt", function(data) {
         var skins = data.split(",");
@@ -646,7 +658,7 @@
             if (elm) {
                 initSetting(id, elm);
             } else {
-                log.warn(`element for setting ${id} doesn't exist.`);
+                log.warn("element for setting " + id + " doesn't exist.");
             }
         }
     }
@@ -654,26 +666,29 @@
         localStorage.setItem("settings", JSON.stringify(settings));
     }
 
-    function request(url, callback, method = "GET", type = "text") {
+    function request(url, callback, method, type) {
+        if (!method) method = "GET";
+        if (!type) type = "text";
         var req = new XMLHttpRequest();
         req.onload = function() {
             callback(this.response);
         };
-        req.responseType = type;
         req.open(method, url);
+        req.responseType = type;
         req.send();
     }
 
     function buildGallery() {
-        byId("gallery-body").innerHTML = `
-        <ul id="skinsUL">
-            ${Object.keys(knownSkins).sort().map(name => `
-                <li class="skin" onclick="changeSkin('${name}')">
-                    <img class="circular" src="${"./skins/" + name + ".png"}">
-                    <h4 class="skinName">${name}</h4>
-                </li>
-            `).join("\n")}
-        </ul>`;
+        var c = "";
+        var sortedKeys = Object.keys(knownSkins).sort();
+        for (var i = 0; i < sortedKeys.length; i++) {
+            var name = sortedKeys[i];
+            c += '<li class="skin" onclick="changeSkin(\'' + name + '\')">';
+            c += '<img class="circular" src="./skins/' + name + '.png">';
+            c += '<h4 class="skinName">' + name + '</h4>';
+            c += '</li>';
+        }
+        byId("gallery-body").innerHTML = '<ul id="skinsUL">' + c + '</ul>';
     }
 
     function drawChat() {
@@ -728,11 +743,11 @@
         var ctx = canvas.getContext("2d");
         ctx.font = "14px Ubuntu";
         var rows = [
-            `${stats.info.name} (${stats.info.mode})`,
-            `${stats.info.playersTotal} / ${stats.info.playersLimit} players`,
-            `${stats.info.playersAlive} playing`,
-            `${stats.info.playersSpect} spectating`,
-            `${(stats.info.update * 2.5).toFixed(1)}% load @ ${prettyPrintTime(stats.info.uptime)}`
+            stats.info.name + " (" + stats.info.mode + ")",
+            stats.info.playersTotal + " / " + stats.info.playersLimit + " players",
+            stats.info.playersAlive + " playing",
+            stats.info.playersSpect + " spectating",
+            (stats.info.update * 2.5).toFixed(1) + "% load @ " + prettyPrintTime(stats.info.uptime)
         ];
         var width = 0;
         for (var i = 0; i < rows.length; i++)
@@ -877,13 +892,13 @@
         mainCtx.fillStyle = settings.darkTheme ? "#666" : "#DDD";
         mainCtx.textBaseline = "middle";
         mainCtx.textAlign = "center";
-        mainCtx.font = `${sectorNameSize}px Ubuntu`;
+        mainCtx.font = sectorNameSize + "px Ubuntu";
 
         for (var i = 0; i < sectorCount; i++) {
             var x = sectorWidth / 2 + i * sectorWidth;
             for (var j = 0; j < sectorCount; j++) {
                 var y = sectorHeight / 2 + j * sectorHeight;
-                mainCtx.fillText(`${sectorNames[0][i]}${sectorNames[1][j]}`, beginX + x, beginY + y);
+                mainCtx.fillText(sectorNames[0][i] + sectorNames[1][j], beginX + x, beginY + y);
             }
         }
 
@@ -922,7 +937,7 @@
         if (cell !== null) {
             mainCtx.fillStyle = settings.darkTheme ? "#DDD" : "#222";
             var textSize = sectorNameSize;
-            mainCtx.font = `${textSize}px Ubuntu`;
+            mainCtx.font = textSize + "px Ubuntu";
             mainCtx.fillText(cell.name, myPosX, myPosY - 7 - textSize / 2);
         }
 
@@ -973,12 +988,12 @@
         mainCtx.textBaseline = "top";
         if (!isNaN(stats.score)) {
             mainCtx.font = "30px Ubuntu";
-            mainCtx.fillText(`Score: ${stats.score}`, 2, height);
+            mainCtx.fillText("Score: " + stats.score, 2, height);
             height += 30;
         }
         mainCtx.font = "20px Ubuntu";
-        var gameStatsText = `${~~stats.framesPerSecond} FPS`;
-        if (!isNaN(stats.latency)) gameStatsText += ` ${stats.latency}ms ping`;
+        var gameStatsText = ~~stats.framesPerSecond + " FPS";
+        if (!isNaN(stats.latency)) gameStatsText += " " + stats.latency + "ms ping";
         mainCtx.fillText(gameStatsText, 2, height);
         height += 24;
 
@@ -1117,7 +1132,7 @@
             if (this.skin === null || !knownSkins.hasOwnProperty(this.skin) || loadedSkins[this.skin])
                 return;
             loadedSkins[this.skin] = new Image();
-            loadedSkins[this.skin].src = `${SKIN_URL}${this.skin}.png`;
+            loadedSkins[this.skin].src = SKIN_URL + this.skin + ".png";
         },
         setColor: function(value) {
             if (!value) { log.warn("got no color"); return; }
@@ -1211,11 +1226,11 @@
     var cachedMass  = { };
 
     function drawTextOnto(canvas, ctx, text, size) {
-        ctx.font = `${size}px Ubuntu`;
+        ctx.font = size + "px Ubuntu";
         ctx.lineWidth = Math.max(~~(size / 10), 2);
         canvas.width = ctx.measureText(text).width + 2 * ctx.lineWidth;
         canvas.height = 4 * size;
-        ctx.font = `${size}px Ubuntu`;
+        ctx.font = size + "px Ubuntu";
         ctx.lineWidth = Math.max(~~(size / 10), 2);
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
@@ -1226,7 +1241,7 @@
         ctx.fillText(text, 0, 0);
     }
     function drawRaw(ctx, x, y, text, size) {
-        ctx.font = `${size}px Ubuntu`;
+        ctx.font = size + "px Ubuntu";
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         ctx.lineWidth = Math.max(~~(size / 10), 2);
@@ -1330,6 +1345,7 @@
     }
     function keydown(event) {
         var key = event.key.toLowerCase();
+        if (IE_KEYS.hasOwnProperty(key)) key = IE_KEYS[key]; // IE fix
         if (key == "enter") {
             if (escOverlayShown || !settings.showChat) return;
             if (isTyping) {
@@ -1356,6 +1372,7 @@
     }
     function keyup(event) {
         var key = event.key.toLowerCase();
+        if (IE_KEYS.hasOwnProperty(key)) key = IE_KEYS[key]; // IE fix
         if (pressed.hasOwnProperty(key)) pressed[key] = false;
         if (key == "q") wsSend(UINT8_CACHE[19]);
         if (key == "w") clearInterval(macroIntervalID);
@@ -1461,7 +1478,7 @@
         }
         window.setserver(byId("gamemode").value);
         window.requestAnimationFrame(drawGame);
-        log.info(`init done in ${Date.now() - LOAD_START}ms`);
+        log.info("init done in " + (Date.now() - LOAD_START) + "ms");
     }
     window.setserver = function(arg) {
         if (wsUrl === arg) return;

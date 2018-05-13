@@ -588,8 +588,8 @@
         "escape": false
     };
 
-    const eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
-    const pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
+    var eatSound = new Sound("./assets/sound/eat.mp3", 0.5, 10);
+    var pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
 
     request("skinList.txt", function(data) {
         var skins = data.split(",");

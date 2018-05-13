@@ -547,7 +547,6 @@
         darkTheme: false,
         showColor: true,
         showMass: false,
-        showTextOutline: true,
         _showChat: true,
         get showChat() {
             return this._showChat;
@@ -1213,11 +1212,11 @@
 
     function drawTextOnto(canvas, ctx, text, size) {
         ctx.font = `${size}px Ubuntu`;
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0;
+        ctx.lineWidth = Math.max(~~(size / 10), 2);
         canvas.width = ctx.measureText(text).width + 2 * ctx.lineWidth;
         canvas.height = 4 * size;
         ctx.font = `${size}px Ubuntu`;
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0;
+        ctx.lineWidth = Math.max(~~(size / 10), 2);
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         ctx.fillStyle = "#FFF"
@@ -1230,7 +1229,7 @@
         ctx.font = `${size}px Ubuntu`;
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
-        ctx.lineWidth = settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0;
+        ctx.lineWidth = Math.max(~~(size / 10), 2);
         ctx.fillStyle = "#FFF"
         ctx.strokeStyle = "#000";
         (ctx.lineWidth !== 1) && ctx.strokeText(text, x, y);
@@ -1269,7 +1268,7 @@
         cachedMass[size] = {
             canvases: canvases,
             size: size,
-            lineWidth: settings.showTextOutline ? Math.max(~~(size / 10), 2) : 0,
+            lineWidth: Math.max(~~(size / 10), 2),
             accessTime: syncAppStamp
         };
         return cachedMass[size];

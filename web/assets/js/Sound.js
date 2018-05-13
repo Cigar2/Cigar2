@@ -1,13 +1,14 @@
-function Sound(src, volume = 0.5, maximum = Infinity) {
+function Sound(src, volume, maximum) {
     this.src = src;
-    this.volume = volume;
-    this.maximum = maximum;
+    this.volume = typeof volume == "number" ? volume : 0.5;
+    this.maximum = typeof maximum == "number" ? maximum : Infinity;
     this.elms = [];
 }
-Sound.prototype.play = function(vol = this.volume) {
-    this.volume = vol;
+Sound.prototype.play = function(vol) {
+    if (typeof vol == "number") this.volume = vol;
     let toPlay;
-    for (const elm of this.elms) {
+    for (var i = 0; i < this.elms.length; i++) {
+        var elm = this.elms[i];
         if (elm.paused) {
             toPlay = elm;
             break;
@@ -21,7 +22,7 @@ Sound.prototype.add = function() {
     if (this.elms.length >= this.maximum) {
         return this.elms[0];
     }
-    const elm = new Audio(this.src);
+    var elm = new Audio(this.src);
     this.elms.push(elm);
     return elm;
 };

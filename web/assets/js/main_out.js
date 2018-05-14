@@ -574,7 +574,8 @@
         showGrid: true,
         playSounds: false,
         soundsVolume: 0.5,
-        moreZoom: false
+        moreZoom: false,
+        fillSkin: true
     };
     var pressed = {
         " ": false,
@@ -1149,8 +1150,8 @@
             ctx.fillStyle = settings.showColor ? this.color : Cell.prototype.color;
             ctx.strokeStyle = settings.showColor ? this.sColor : Cell.prototype.sColor;
             ctx.lineWidth = Math.max(~~(this.s / 50), 10);
-            if (!this.ejected && 20 < this.s)
-                this.s -= ctx.lineWidth / 2 - 2;
+            if (this.s > 20)
+                this.s -= ctx.lineWidth / 2;
 
             ctx.beginPath();
             if (this.jagged) {
@@ -1174,9 +1175,7 @@
                 ctx.globalAlpha = Math.max(120 - Date.now() + this.dead, 0) / 120;
             else ctx.globalAlpha = Math.min(Date.now() - this.born, 120) / 120;
 
-            if (!this.ejected && 20 < this.s)
-                ctx.stroke();
-            ctx.fill();
+            if (settings.fillSkin) ctx.fill();
             if (settings.showSkins && this.skin) {
                 var skin = loadedSkins[this.skin];
                 if (skin && skin.complete && skin.width && skin.height) {
@@ -1191,9 +1190,11 @@
                     scaleForth(ctx);
                     ctx.restore();
                 }
+            } else if (!settings.fillSkin) ctx.fill();
+            if (this.s > 20) {
+                ctx.stroke();
+                this.s += ctx.lineWidth / 2;
             }
-            if (!this.ejected && 20 < this.s)
-                this.s += ctx.lineWidth / 2 - 2;
         },
         drawText: function(ctx) {
             if (this.s < 20 || this.jagged) return;

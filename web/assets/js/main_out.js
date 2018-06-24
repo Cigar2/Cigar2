@@ -1,8 +1,5 @@
 (function() {
     "use strict";
-    if (navigator.appVersion.indexOf("MSIE") != -1)
-        alert("You're using a pretty old browser, some parts of the website might not work properly.");
-
     if (typeof WebSocket == "undefined" || typeof DataView == "undefined" || typeof ArrayBuffer == "undefined" || typeof Uint8Array == "undefined")
         return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
 

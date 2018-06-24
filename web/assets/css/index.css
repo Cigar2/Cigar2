@@ -73,6 +73,7 @@ input[type=checkbox] {
     text-indent: 12px;
     left: 10px;
     width: 300px;
+    font-family: "Ubuntu";
 }
 #chat_textbox:focus {
     background: rgba(0, 0, 0, .5);

@@ -1,9 +1,7 @@
-const fs = require("fs");
-
-const folderContents = fs.readdirSync("./web/skins");
-const fileNames = folderContents.filter(f => f.endsWith(".png"));
-const skins = fileNames.map(f => f.slice(0, -4));
-fs.writeFileSync("./web/skinList.txt", skins.join(), err => {
+const fs = require("fs"),
+      folderContents = fs.readdirSync("./web/skins"),
+      fileNames = folderContents.filter(f => f.endsWith(".png"));
+fs.writeFileSync("./web/skinList.txt", fileNames.map(f => f.slice(0, -4)).join(), err => {
     if (err) throw err;
 });
 console.log("Successfully updated skinList.txt!");

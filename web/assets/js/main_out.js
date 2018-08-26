@@ -1,20 +1,18 @@
 (function() {
     "use strict";
-    if (typeof WebSocket == "undefined" || typeof DataView == "undefined" || typeof ArrayBuffer == "undefined" || typeof Uint8Array == "undefined")
-        return alert("Your browser does not support required functions, please update your browser or get a good one (Firefox will work perfectly)");
-
-    function byId(id, parent) {return (parent || document).getElementById(id)}
-    function byClass(clss, parent) {
-        return (parent || document).getElementsByClassName(clss);
+    if (typeof WebSocket === 'undefined' || typeof DataView === 'undefined' ||
+        typeof ArrayBuffer === 'undefined' || typeof Uint8Array === 'undefined') {
+        alert('Your browser does not support required features, please update your browser or get a new one');
+        window.stop();
     }
+
+    function byId(id, parent) {return (parent || document).getElementById(id);}
+    function byClass(clss, parent) {return (parent || document).getElementsByClassName(clss);}
 
     Date.now || (Date.now = function() {
         return (+new Date).getTime();
     });
     var LOAD_START = Date.now();
-    Array.prototype.peek = function() {
-        return this[this.length - 1];
-    };
     Array.prototype.remove = function(a) {
         var i = this.indexOf(a);
         if (i !== -1) this.splice(i, 1);

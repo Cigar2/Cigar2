@@ -758,7 +758,7 @@
     }
 
     function drawPosition() {
-        if(!settings.showPosition) return;
+        if(border.centerX !== 0 || border.centerY !== 0 || !settings.showPosition) return;
         var width = 200 * (border.width / border.height);
         var height = 40 * (border.height / border.width);
 
@@ -773,7 +773,7 @@
         mainCtx.globalAlpha = 1;
 
         mainCtx.fillStyle = "#FFF";
-        drawRaw(mainCtx, beginX+width/2, beginY+height/2, 'X: ' + ~~cameraX + ', Y: ' + ~~cameraY);
+        drawRaw(mainCtx, beginX+width/2, beginY+height/2, 'X: ' + ~~cameraPos.x + ', Y: ' + ~~cameraPos.y);
     }
 
     function prettyPrintTime(seconds) {

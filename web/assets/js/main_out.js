@@ -773,7 +773,7 @@
         mainCtx.globalAlpha = 1;
 
         mainCtx.fillStyle = "#FFF";
-        drawRaw(mainCtx, beginX+width/2, beginY+height/2, 'X: ' + ~~cameraPos.x + ', Y: ' + ~~cameraPos.y);
+        drawRaw(mainCtx, beginX+width/2, beginY+height/2, 'X: ' + ~~cameraX + ', Y: ' + ~~cameraY);
     }
 
     function prettyPrintTime(seconds) {

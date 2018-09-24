@@ -6,7 +6,7 @@
         window.stop();
     }
 
-    function byId(id, parent) {return (parent || document).getElementById(id);}
+    function byId(id) {return document.getElementById(id);}
     function byClass(clss, parent) {return (parent || document).getElementsByClassName(clss);}
 
     Date.now || (Date.now = function() {

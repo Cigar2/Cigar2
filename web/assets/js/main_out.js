@@ -193,7 +193,7 @@
         }
     };
     var log = {
-        verbosity: 4,
+        verbosity: 2,
         error: function() {
             if (log.verbosity > 0) console.error.apply(null, arguments);
         },

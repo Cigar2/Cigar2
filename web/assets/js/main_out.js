@@ -363,7 +363,7 @@
                 cells.mine = [];
                 break;
             case 0x15: // draw line
-                log.warn("got packer 0x15 (draw line) which is unsupported");
+                log.warn("got packet 0x15 (draw line) which is unsupported");
                 break;
             case 0x20: // new cell
                 cells.mine.push(reader.getUint32());

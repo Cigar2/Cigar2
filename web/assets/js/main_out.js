@@ -1149,9 +1149,11 @@
         },
         setName: function(value) {
             var nameSkin = /\{([\w\W]+)\}/.exec(value);
-            if (this.skin === null && nameSkin !== null) {
+            if (this.skin === null) {
+              if(nameSkin !== null) {
                 this.name = value.replace(nameSkin[0], "").trim();
                 this.setSkin(nameSkin[1]);
+              } else this.setSkin(value);
             } else this.name = value;
         },
         setSkin: function(value) {

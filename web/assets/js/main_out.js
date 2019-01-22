@@ -672,16 +672,13 @@
         if (text) {
             var obj = JSON.parse(text);
             for (var prop in obj)
-                if (settings.hasOwnProperty(prop))
-                    settings[prop] = obj[prop];
-        }
-        for (var id in settings) {
-            var elm = byId(id.charAt(0)  == "_" ? id.slice(1) : id);
-            if (elm) {
-                initSetting(id, elm);
-            } else {
-                log.warn("element for setting " + id + " doesn't exist.");
-            }
+                if (settings.hasOwnProperty(prop)) {
+                    var elm = byId(prop.charAt(0) === "_" ? prop.slice(1) : prop);
+                    if(elm) {
+                        settings[prop] = obj[prop];
+                        initSetting(prop, elm);
+                    } else log.info("setting " + prop + " not loaded because there is no element for it.");
+                }
         }
     }
     function storeSettings() {

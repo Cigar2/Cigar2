@@ -791,15 +791,20 @@
         var beginX = mainCanvas.width / viewMult - width;
         var beginY = mainCanvas.height / viewMult - height;
 
-        if (settings.showMinimap) beginY = beginY - 10 - 200 * border.height / border.width;
-
-        mainCtx.fillStyle = "#000";
-        mainCtx.globalAlpha = 0.4;
-        mainCtx.fillRect(beginX, beginY, width, height);
-        mainCtx.globalAlpha = 1;
-
-        mainCtx.fillStyle = "#FFF";
-        drawRaw(mainCtx, beginX+width/2, beginY+height/2, 'X: ' + ~~cameraX + ', Y: ' + ~~cameraY);
+        if (settings.showMinimap) {
+          mainCtx.font = "15px Ubuntu";
+          beginX += width / 2 - 1;
+          beginY = beginY - 194 * border.height / border.width;
+          mainCtx.textAlign = "right";
+          mainCtx.fillStyle = settings.darkTheme ? "#AAA" : "#555";
+          mainCtx.fillText("X: " + ~~cameraX + ", Y: " + ~~cameraY, beginX + width / 2, beginY + height / 2);
+        } else {
+          mainCtx.fillStyle = "#000";
+          mainCtx.globalAlpha = 0.4;
+          mainCtx.fillRect(beginX, beginY, width, height);
+          mainCtx.globalAlpha = 1;
+          drawRaw(mainCtx, beginX + width / 2, beginY + height / 2, "X: " + ~~cameraX + ", Y: " + ~~cameraY);
+        }
     }
 
     function prettyPrintTime(seconds) {

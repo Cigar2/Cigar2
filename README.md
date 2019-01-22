@@ -1,7 +1,5 @@
-**Warning:** Cigar2 is no longer actively developed!
-
 # Cigar2  
-Protocol 6 Agar.io client for private servers (Ogar\*)
+Protocol 6 Agar.io client for private servers
 
 ### Getting support | Discord server
 If you need extra help with anything you should ask it in the [Agar.io Private Servers Discord](https://discord.gg/66X2ESb) and not in issues.
@@ -16,7 +14,7 @@ Locate the select element in the index.html and add new entries, make sure to on
 - [Luka's Cigar](https://github.com/Luka967/Cigar)
 
 ### Uploading skins
-Upload them to the skins folder and run the updateSkinList file (bat & sh coming soon) in the root directory, you can also do it manually by putting skin names in `web/skinList.txt` separated by commas.
+Upload your **PNG** files to the skins folder and run the updateSkinList file in the root directory, you can also do it manually by putting the skin names in `web/skinList.txt` separated by commas (no file extension).
 
 ### Todos
 Check out [issue 1](https://github.com/Cigar2/Cigar2/issues/1)

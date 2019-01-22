@@ -17,7 +17,7 @@
     }
     Sound.prototype.play = function(vol) {
         if (typeof vol == "number") this.volume = vol;
-        let toPlay;
+        var toPlay;
         for (var i = 0; i < this.elms.length; i++) {
             var elm = this.elms[i];
             if (elm.paused) {

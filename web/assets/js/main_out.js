@@ -1524,7 +1524,7 @@
         byId("gallery").hide();
     };
     window.openSkinsList = function() {
-        buildGallery();
+        if (byId("gallery-body").innerHTML == "") buildGallery();
         byId("gallery").show(0.5);
     };
     window.addEventListener("DOMContentLoaded", init);

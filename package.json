@@ -7,7 +7,7 @@
     "start": "node webserver.js"
   },
   "dependencies": {
-    "express": "^4.16.3"
+    "express": "^4.16.4"
   },
   "engines": {
     "node": "8.x"

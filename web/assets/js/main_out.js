@@ -966,7 +966,7 @@
                     mainCtx.fillStyle = cell.color; // repeat assignment of same color is OK
                     var x = beginX + (cell.x + halfWidth) * xScaler;
                     var y = beginY + (cell.y + halfHeight) * yScaler;
-                    var r = cell.s * xScaler; // if map is square, both scalers should be the same
+                    var r = Math.max(cell.s, 200) * (xScaler + yScaler) / 2;
                     mainCtx.moveTo(x + r, y);
                     mainCtx.arc(x, y, r, 0, PI_2);
                 }

@@ -596,7 +596,8 @@
         playSounds: false,
         soundsVolume: 0.5,
         moreZoom: false,
-        fillSkin: true
+        fillSkin: true,
+        backgroundSectors: false
     };
     var pressed = {
         " ": false,
@@ -893,6 +894,31 @@
         mainCtx.stroke();
         mainCtx.restore();
     }
+    function drawBackgroundSectors() {
+        if (border === undefined || border.width === undefined) return;
+        mainCtx.save();
+
+        var sectorCount = 5;
+        var sectorNames = ["ABCDE", "12345"];
+        var w = border.width / sectorCount;
+        var h = border.height / sectorCount;
+
+        toCamera(mainCtx);
+        mainCtx.fillStyle = settings.darkTheme ? "#666" : "#DDD";
+        mainCtx.textBaseline = "middle";
+        mainCtx.textAlign = "center";
+        mainCtx.font = (w / 3 | 0) + "px Ubuntu";
+
+        for (var y = 0; y < sectorCount; ++y) {
+            for (var x = 0; x < sectorCount; ++x) {
+                var str = sectorNames[0][x] + sectorNames[1][y];
+                var dx = (x + 0.5) * w + border.left;
+                var dy = (y + 0.5) * h + border.top;
+                mainCtx.fillText(str, dx, dy);
+            }
+        }
+        mainCtx.restore();
+    }
     function drawMinimap() {
         if (border.centerX !== 0 || border.centerY !== 0 || !settings.showMinimap) return;
         mainCtx.save();
@@ -997,6 +1023,7 @@
         mainCtx.fillStyle = settings.darkTheme ? "#111" : "#F2FBFF";
         mainCtx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
         if (settings.showGrid) drawGrid();
+        if (settings.backgroundSectors) drawBackgroundSectors();
 
         toCamera(mainCtx);
         drawBorders();

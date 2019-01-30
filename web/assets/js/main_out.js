@@ -1252,7 +1252,7 @@
             }
         },
         drawText: function(ctx) {
-            if (this.s < 20 || this.jagged) return;
+            if (this.s < 20 || this.jagged || this.name == "An unnamed cell") return;
             if (settings.showMass && (cells.mine.indexOf(this.id) !== -1 || cells.mine.length === 0)) {
                 var mass = (~~(this.s * this.s / 100)).toString();
                 if (this.name && settings.showNames) {

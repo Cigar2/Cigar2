@@ -318,8 +318,8 @@
 
                     flags = reader.getUint8();
                     updColor = !!(flags & 0x02);
-                    updSkin = !!(flags & 0x04);
                     updName = !!(flags & 0x08);
+                    updSkin = !!(flags & 0x04);
                     color = updColor ? bytesToHex(reader.getUint8(), reader.getUint8(), reader.getUint8()) : null;
                     skin = updSkin ? reader.getStringUTF8() : null;
                     name = updName ? reader.getStringUTF8() : null;
@@ -335,8 +335,8 @@
                         cell.ny = y;
                         cell.ns = s;
                         if (color) cell.setColor(color);
-                        if (name) cell.setName(name);
                         if (skin) cell.setSkin(skin);
+                        if (name) cell.setName(name);
                     } else {
                         cell = new Cell(id, x, y, s, name, color, skin, flags);
                         cells.byId[id] = cell;
@@ -382,14 +382,11 @@
                 leaderboard.type = "ffa";
 
                 var count = reader.getUint32();
-                for (i = 0; i < count; ++i) {
-                    var isMe = !!reader.getUint32();
-                    var name = reader.getStringUTF8();
+                for (i = 0; i < count; ++i)
                     leaderboard.items.push({
-                        me: isMe,
-                        name: Cell.prototype.parseName(name).name
+                        me: !!reader.getUint32(),
+                        name: reader.getStringUTF8() || "An unnamed cell"
                     });
-                }
                 drawLeaderboard();
                 break;
             case 0x32: // pie chart
@@ -428,8 +425,9 @@
                 var flags = reader.getUint8();
                 var color = bytesToHex(reader.getUint8(), reader.getUint8(), reader.getUint8());
 
-                var name = reader.getStringUTF8();
-                name = Cell.prototype.parseName(name).name;
+                var name = reader.getStringUTF8().trim();
+                var reg = /\{([\w]+)\}/.exec(name);
+                if (reg) name = name.replace(reg[0], "").trim();
                 var message = reader.getStringUTF8();
 
                 var server = !!(flags & 0x80),
@@ -1173,18 +1171,17 @@
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
         },
-        parseName: function(value) {
-            value = (value || "").trim();
-            var nameAndSkin = /^(?:\{([^}]*)\})?([^]*)/.exec(value);
-            return {
-                name: (nameAndSkin[2] || "An unnamed cell").trim(),
-                skin: nameAndSkin[1] || value
-            };
-        },
-        setName: function(name) {
-            var nameAndSkin = Cell.prototype.parseName(name);
-            this.name = nameAndSkin.name;
-            this.setSkin(nameAndSkin.skin);
+        setName: function(value) {
+            var nameSkin = /\{([\w\W]+)\}/.exec(value);
+            if (this.skin === null) {
+              if(nameSkin !== null) {
+                this.name = value.replace(nameSkin[0], "").trim();
+                this.setSkin(nameSkin[1]);
+              } else {
+                  this.name = value;
+                  this.setSkin(value);
+              }
+            } else this.name = value;
         },
         setSkin: function(value) {
             this.skin = (value && value[0] === "%" ? value.slice(1) : value) || this.skin;

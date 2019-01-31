@@ -211,6 +211,7 @@
     var wsUrl = null,
         SKIN_URL = "./skins/",
         USE_HTTPS = "https:" == window.location.protocol,
+        EMPTY_NAME = "An unnamed cell",
         PI_2 = Math.PI * 2,
         SEND_254 = new Uint8Array([254, 6, 0, 0, 0]),
         SEND_255 = new Uint8Array([255, 1, 0, 0, 0]),
@@ -318,8 +319,8 @@
 
                     flags = reader.getUint8();
                     updColor = !!(flags & 0x02);
-                    updName = !!(flags & 0x08);
                     updSkin = !!(flags & 0x04);
+                    updName = !!(flags & 0x08);
                     color = updColor ? bytesToHex(reader.getUint8(), reader.getUint8(), reader.getUint8()) : null;
                     skin = updSkin ? reader.getStringUTF8() : null;
                     name = updName ? reader.getStringUTF8() : null;
@@ -335,8 +336,8 @@
                         cell.ny = y;
                         cell.ns = s;
                         if (color) cell.setColor(color);
-                        if (skin) cell.setSkin(skin);
                         if (name) cell.setName(name);
+                        if (skin) cell.setSkin(skin);
                     } else {
                         cell = new Cell(id, x, y, s, name, color, skin, flags);
                         cells.byId[id] = cell;
@@ -382,11 +383,14 @@
                 leaderboard.type = "ffa";
 
                 var count = reader.getUint32();
-                for (i = 0; i < count; ++i)
+                for (i = 0; i < count; ++i) {
+                    var isMe = !!reader.getUint32();
+                    var name = reader.getStringUTF8();
                     leaderboard.items.push({
-                        me: !!reader.getUint32(),
-                        name: reader.getStringUTF8() || "An unnamed cell"
+                        me: isMe,
+                        name: Cell.prototype.parseName(name).name || EMPTY_NAME
                     });
+                }
                 drawLeaderboard();
                 break;
             case 0x32: // pie chart
@@ -425,9 +429,8 @@
                 var flags = reader.getUint8();
                 var color = bytesToHex(reader.getUint8(), reader.getUint8(), reader.getUint8());
 
-                var name = reader.getStringUTF8().trim();
-                var reg = /\{([\w]+)\}/.exec(name);
-                if (reg) name = name.replace(reg[0], "").trim();
+                var name = reader.getStringUTF8();
+                name = Cell.prototype.parseName(name).name || EMPTY_NAME;
                 var message = reader.getStringUTF8();
 
                 var server = !!(flags & 0x80),
@@ -857,13 +860,9 @@
                     text = leaderboard.items[i].name,
                     isMe = leaderboard.items[i].me;
 
-                // replace {skin} with empty string
-                var reg = /\{([\w]+)\}/.exec(text);
-                if (reg) text = text.replace(reg[0], "").trim();
-
                 ctx.fillStyle = isMe ? "#FAA" : "#FFF";
                 if (leaderboard.type === "ffa")
-                    text = (i + 1) + ". " + (text || "An unnamed cell");
+                    text = (i + 1) + ". " + text;
                 var start = ((w = ctx.measureText(text).width) > 200) ? 2 : 100 - w * 0.5;
                 ctx.fillText(text, start, 70 + 24 * i);
             }
@@ -988,7 +987,7 @@
             mainCtx.fillStyle = settings.darkTheme ? "#DDD" : "#222";
             var textSize = sectorNameSize;
             mainCtx.font = textSize + "px Ubuntu";
-            mainCtx.fillText(cell.name, myPosX, myPosY - 7 - textSize / 2);
+            mainCtx.fillText(cell.name || EMPTY_NAME, myPosX, myPosY - 7 - textSize / 2);
         }
 
         mainCtx.restore();
@@ -1171,17 +1170,18 @@
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
         },
-        setName: function(value) {
-            var nameSkin = /\{([\w\W]+)\}/.exec(value);
-            if (this.skin === null) {
-              if(nameSkin !== null) {
-                this.name = value.replace(nameSkin[0], "").trim();
-                this.setSkin(nameSkin[1]);
-              } else {
-                  this.name = value;
-                  this.setSkin(value);
-              }
-            } else this.name = value;
+        parseName: function(value) { // static method
+            value = value || "";
+            var nameAndSkin = /^(?:\{([^}]*)\})?([^]*)/.exec(value);
+            return {
+                name: nameAndSkin[2].trim(),
+                skin: (nameAndSkin[1] || "").trim() || nameAndSkin[2]
+            };
+        },
+        setName: function(name) {
+            var nameAndSkin = Cell.prototype.parseName(name);
+            this.name = nameAndSkin.name;
+            this.setSkin(nameAndSkin.skin);
         },
         setSkin: function(value) {
             this.skin = (value && value[0] === "%" ? value.slice(1) : value) || this.skin;
@@ -1253,15 +1253,15 @@
         },
         drawText: function(ctx) {
             if (this.s < 20 || this.jagged) return;
+            var y = this.y;
+            if (this.name && settings.showNames) {
+                drawText(ctx, false, this.x, this.y, this.nameSize, this.drawNameSize, this.name);
+                y += Math.max(this.s / 4.5, this.nameSize / 1.5);
+            }
             if (settings.showMass && (cells.mine.indexOf(this.id) !== -1 || cells.mine.length === 0)) {
                 var mass = (~~(this.s * this.s / 100)).toString();
-                if (this.name && settings.showNames) {
-                    drawText(ctx, false, this.x, this.y, this.nameSize, this.drawNameSize, this.name);
-                    var y = this.y + Math.max(this.s / 4.5, this.nameSize / 1.5);
-                    drawText(ctx, true, this.x, y, this.nameSize / 2, this.drawNameSize / 2, mass);
-                } else drawText(ctx, true, this.x, this.y, this.nameSize / 2, this.drawNameSize / 2, mass);
-            } else if (this.name && settings.showNames)
-                drawText(ctx, false, this.x, this.y, this.nameSize, this.drawNameSize, this.name);
+                drawText(ctx, true, this.x, y, this.nameSize / 2, this.drawNameSize / 2, mass);
+            }
         }
     };
 

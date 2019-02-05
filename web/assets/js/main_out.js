@@ -677,17 +677,15 @@
     }
     function loadSettings() {
         var text = localStorage.getItem("settings");
-        if (text) {
-            var obj = JSON.parse(text);
-            for (var prop in obj)
-                if (settings.hasOwnProperty(prop)) {
-                    var elm = byId(prop.charAt(0) === "_" ? prop.slice(1) : prop);
-                    if(elm) {
-                        settings[prop] = obj[prop];
-                        initSetting(prop, elm);
-                    } else log.info("setting " + prop + " not loaded because there is no element for it.");
-                }
-        }
+        var obj = text ? JSON.parse(text) : settings;
+        for (var prop in obj)
+            if (settings.hasOwnProperty(prop)) {
+                var elm = byId(prop.charAt(0) === "_" ? prop.slice(1) : prop);
+                if (elm) {
+                    settings[prop] = obj[prop];
+                    initSetting(prop, elm);
+                } else log.info("setting " + prop + " not loaded because there is no element for it.");
+            }
     }
     function storeSettings() {
         localStorage.setItem("settings", JSON.stringify(settings));

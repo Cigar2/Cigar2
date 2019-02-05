@@ -573,6 +573,7 @@
     var skinList = [];
     var macroCooldown = 1000 / 7;
     var macroIntervalID;
+    var quadtree;
 
     var settings = {
         nick: "",
@@ -600,7 +601,8 @@
         soundsVolume: 0.5,
         moreZoom: false,
         fillSkin: true,
-        backgroundSectors: false
+        backgroundSectors: false,
+        jellyPhysics: true
     };
     var pressed = {
         " ": false,
@@ -651,7 +653,9 @@
         function simpleAssignListen(id, elm, prop) {
             if (settings[id] !== "") elm[prop] = settings[id];
             elm.addEventListener("change", function() {
-                settings[id] = elm[prop];
+                requestAnimationFrame(function() {
+                    settings[id] = elm[prop];
+                });
             });
         }
         switch (elm.tagName.toLowerCase()) {
@@ -1016,6 +1020,7 @@
         for (var i = 0, l = drawList.length; i < l; i++)
             drawList[i].update(syncAppStamp);
         cameraUpdate();
+        if (settings.jellyPhysics) updateQuadtree();
 
         mainCtx.save();
 
@@ -1120,6 +1125,36 @@
         cameraZ += (targetZ * viewMult * mouseZ - cameraZ) / 9;
         cameraZInvd = 1 / cameraZ;
     }
+    function sqDist(a, b) {
+        return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+    }
+    function updateQuadtree() {
+        var minX = Number.POSITIVE_INFINITY;
+        var minY = Number.POSITIVE_INFINITY;
+        var maxX = Number.NEGATIVE_INFINITY;
+        var maxY = Number.NEGATIVE_INFINITY;
+        var largestSize = 0;
+        for (var i = 0; i < cells.list.length; ++i) {
+            var cell = cells.list[i];
+            largestSize = Math.max(cell.s, largestSize);
+            minX = Math.min(cell.x, minX);
+            minY = Math.min(cell.y, minY);
+            maxX = Math.max(cell.x, maxX);
+            maxY = Math.max(cell.y, maxY);
+        }
+        largestSize += 100;
+        var x = minX - largestSize;
+        var y = minY - largestSize;
+        var w = (maxX + largestSize) - x;
+        var h = (maxY + largestSize) - y;
+        quadtree = new PointQuadTree(x, y, w, h, 32);
+        for (var i = 0; i < cells.list.length; ++i) {
+            var cell = cells.list[i];
+            for (var n = 0; n < cell.points.length; ++n) {
+                quadtree.insert(cell.points[n]);
+            }
+        }
+    }
 
     function Cell(id, x, y, s, name, color, skin, flags) {
         this.id = id;
@@ -1132,6 +1167,8 @@
         this.jagged = flags & 0x01 || flags & 0x10;
         this.ejected = !!(flags & 0x20);
         this.born = syncUpdStamp;
+        this.points = [];
+        this.pointsVel = [];
     }
     Cell.prototype = {
         destroyed: false,
@@ -1163,12 +1200,96 @@
                 this.nx = cells.byId[this.diedBy].x;
                 this.ny = cells.byId[this.diedBy].y;
             }
-            var dt2 = this.diedBy ? dt * dt : dt;
-            this.x = this.ox + (this.nx - this.ox) * dt2;
-            this.y = this.oy + (this.ny - this.oy) * dt2;
+            this.x = this.ox + (this.nx - this.ox) * dt;
+            this.y = this.oy + (this.ny - this.oy) * dt;
             this.s = this.os + (this.ns - this.os) * dt;
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
+            if (settings.jellyPhysics) {
+                this.updateNumPoints();
+                this.movePoints();
+            } else if (this.points.length) {
+                this.points = [];
+                this.pointsVel = [];
+            }
+        },
+        updateNumPoints: function() {
+            var numPoints = Math.max(this.s * cameraZ | 0, 5);
+            if (this.jagged) numPoints = 120;
+            while (this.points.length > numPoints) {
+                var i = Math.random() * this.points.length | 0;
+                this.points.splice(i, 1);
+                this.pointsVel.splice(i, 1);
+            }
+            if (this.points.length == 0 && numPoints != 0) {
+                this.points.push({
+                    x: this.x,
+                    y: this.y,
+                    rl: this.s,
+                    parent: this
+                });
+                this.pointsVel.push(Math.random() - 0.5);
+            }
+            while (this.points.length < numPoints) {
+                var i = Math.random() * this.points.length | 0;
+                var point = this.points[i];
+                var vel = this.pointsVel[i];
+                this.points.splice(i, 0, {
+                    x: point.x,
+                    y: point.y,
+                    rl: point.rl,
+                    parent: this
+                });
+                this.pointsVel.splice(i, 0, vel);
+            }
+        },
+        movePoints: function() {
+            var pointsVel = this.pointsVel.slice();
+            var len = this.points.length;
+            for (var i = 0; i < len; ++i) {
+                var prevVel = pointsVel[(i - 1 + len) % len];
+                var nextVel = pointsVel[(i + 1) % len];
+                var newVel = (this.pointsVel[i] + Math.random() - 0.5) * 0.7;
+                newVel = Math.max(Math.min(newVel, 10), -10);
+                this.pointsVel[i] = (prevVel + nextVel + 8 * newVel) / 10;
+            }
+            for (var i = 0; i < len; ++i) {
+                var curP = this.points[i];
+                var curRl = curP.rl;
+                var prevRl = this.points[(i - 1 + len) % len].rl;
+                var nextRl = this.points[(i + 1) % len].rl;
+                var self = this;
+                var affected = quadtree.some({
+                    x: curP.x - 5,
+                    y: curP.y - 5,
+                    w: 10,
+                    h: 10
+                }, function(item) {
+                    return item.parent != self && sqDist(item, curP) <= 25;
+                });
+                if (!affected &&
+                    (curP.x < border.left || curP.y < border.top ||
+                    curP.x > border.right || curP.y > border.bottom))
+                {
+                    affected = true;
+                }
+                if (affected) {
+                    this.pointsVel[i] = Math.min(this.pointsVel[i], 0);
+                    this.pointsVel[i] -= 1;
+                }
+                curRl += this.pointsVel[i];
+                curRl = Math.max(curRl, 0);
+                curRl = (9 * curRl + this.s) / 10;
+                curP.rl = (prevRl + nextRl + 8 * curRl) / 10;
+
+                var angle = 2 * Math.PI * i / len;
+                var rl = curP.rl;
+                if (this.jagged && i % 2 == 0) {
+                    rl += 5;
+                }
+                curP.x = this.x + Math.cos(angle) * rl;
+                curP.y = this.y + Math.sin(angle) * rl;
+            }
         },
         parseName: function(value) { // static method
             value = value || "";
@@ -1209,8 +1330,15 @@
                 this.s -= ctx.lineWidth / 2;
 
             ctx.beginPath();
-            if (this.jagged) {
-                ctx.lineJoin = "miter";
+            if (this.jagged) ctx.lineJoin = "miter";
+            if (settings.jellyPhysics) {
+                var point = this.points[0];
+                ctx.moveTo(point.x, point.y);
+                for (var i = 0; i < this.points.length; ++i) {
+                    var point = this.points[i];
+                    ctx.lineTo(point.x, point.y);
+                }
+            } else if (this.jagged) {
                 var pointCount = 120;
                 var incremental = PI_2 / pointCount;
                 ctx.moveTo(this.x, this.y + this.s + 3);

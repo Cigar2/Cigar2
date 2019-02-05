@@ -678,14 +678,13 @@
     function loadSettings() {
         var text = localStorage.getItem("settings");
         var obj = text ? JSON.parse(text) : settings;
-        for (var prop in obj)
-            if (settings.hasOwnProperty(prop)) {
-                var elm = byId(prop.charAt(0) === "_" ? prop.slice(1) : prop);
-                if (elm) {
-                    settings[prop] = obj[prop];
-                    initSetting(prop, elm);
-                } else log.info("setting " + prop + " not loaded because there is no element for it.");
-            }
+        for (var prop in settings) {
+            var elm = byId(prop.charAt(0) === "_" ? prop.slice(1) : prop);
+            if (elm) {
+                if(obj.hasOwnProperty(prop)) settings[prop] = obj[prop];
+                initSetting(prop, elm);
+            } else log.info("setting " + prop + " not loaded because there is no element for it.");
+        }
     }
     function storeSettings() {
         localStorage.setItem("settings", JSON.stringify(settings));

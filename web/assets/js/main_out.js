@@ -368,6 +368,8 @@
                 camera.target.x = reader.getFloat32();
                 camera.target.y = reader.getFloat32();
                 camera.target.scale = reader.getFloat32();
+                camera.target.scale *= camera.viewportScale;
+                camera.target.scale *= camera.userZoom;
                 break;
             case 0x12: // clear all
                 for (var i in cells.byId)

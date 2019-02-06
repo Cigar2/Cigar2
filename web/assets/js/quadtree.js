@@ -96,6 +96,7 @@ var PointQuadTree = (function() {
             this.root.clear();
         },
         insert: function(point) {
+            if (!this.root.containsPoint(point)) return;
             this.root.insert(point, this.maxPoints);
         },
         some: function(aabb, test) {

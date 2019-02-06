@@ -58,7 +58,7 @@
             }, 20);
         }
     };
-    if (!Array.prototype.hasOwnProperty("includes")) { // IE fix
+    if (!Array.prototype.includes) {
         Array.prototype.includes = function(val) {
             for (var i = 0; i < this.length; i++) {
                 if (this[i] === val) return true;
@@ -66,6 +66,14 @@
             return false;
         };
     }
+    (function() {
+        var ctxProto = CanvasRenderingContext2D.prototype;
+        if (ctxProto.resetTransform) return;
+        ctxProto.resetTransform = function() {
+            this.setTransform(1, 0, 0, 1, 0, 0);
+        };
+    })();
+
     function bytesToHex(r, g, b) {
         return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
     }
@@ -212,6 +220,10 @@
         SKIN_URL = "./skins/",
         USE_HTTPS = "https:" == window.location.protocol,
         EMPTY_NAME = "An unnamed cell",
+        QUADTREE_MAX_POINTS = 32,
+        CELL_POINTS_MIN = 5,
+        CELL_POINTS_MAX = 120,
+        VIRUS_POINTS = 100,
         PI_2 = Math.PI * 2,
         SEND_254 = new Uint8Array([254, 6, 0, 0, 0]),
         SEND_255 = new Uint8Array([255, 1, 0, 0, 0]),
@@ -353,9 +365,9 @@
                 }
                 break;
             case 0x11: // update pos
-                targetX = reader.getFloat32();
-                targetY = reader.getFloat32();
-                targetZ = reader.getFloat32();
+                camera.target.x = reader.getFloat32();
+                camera.target.y = reader.getFloat32();
+                camera.target.scale = reader.getFloat32();
                 break;
             case 0x12: // clear all
                 for (var i in cells.byId)
@@ -414,9 +426,9 @@
                 if (data.data.byteLength === 33) break;
                 if (!mapCenterSet) {
                     mapCenterSet = true;
-                    cameraX = targetX = border.centerX;
-                    cameraY = targetY = border.centerY;
-                    cameraZ = targetZ = 1;
+                    camera.x = camera.target.x = border.centerX;
+                    camera.y = camera.target.y = border.centerY;
+                    camera.scale = camera.target.scale = 1;
                 }
                 reader.getUint32(); // game type
                 if (!/MultiOgar|OgarII/.test(reader.getStringUTF8()) || stats.pingLoopId) break;
@@ -497,8 +509,8 @@
         cells.mine = [];
         cells.byId = { };
         cells.list = [];
-        cameraX = cameraY = targetX = targetY = 0;
-        cameraZ = targetZ = 1;
+        camera.x = camera.y = camera.target.x = camera.target.y = 0;
+        camera.scale = camera.target.scale = 1;
         mapCenterSet = false;
     }
 
@@ -530,7 +542,7 @@
         visible: false,
     });
     var stats = Object.create({
-        framesPerSecond: 0,
+        fps: 0,
         latency: NaN,
         supports: null,
         info: null,
@@ -559,17 +571,21 @@
     var chatBox = null;
     var mapCenterSet = false;
     var minionControlled = false;
-    var cameraX = 0;
-    var cameraY = 0;
-    var cameraZ = 1;
-    var cameraZInvd = 1;
-    var targetX = 0;
-    var targetY = 0;
-    var targetZ = 1;
-    var viewMult = 1;
+    var camera = {
+        x: 0,
+        y: 0,
+        target: {
+            x: 0,
+            y: 0,
+            scale: 1
+        },
+        viewportScale: 1,
+        userZoom: 1,
+        sizeScale: 1,
+        scale: 1
+    };
     var mouseX = NaN;
     var mouseY = NaN;
-    var mouseZ = 1;
     var skinList = [];
     var macroCooldown = 1000 / 7;
     var macroIntervalID;
@@ -639,12 +655,16 @@
     function toCamera(ctx) {
         ctx.translate(mainCanvas.width / 2, mainCanvas.height / 2);
         scaleForth(ctx);
-        ctx.translate(-cameraX, -cameraY);
+        ctx.translate(-camera.x, -camera.y);
     }
-    function scaleForth(ctx) { ctx.scale(cameraZ, cameraZ); }
-    function scaleBack(ctx) { ctx.scale(cameraZInvd, cameraZInvd); }
+    function scaleForth(ctx) {
+        ctx.scale(camera.scale, camera.scale);
+    }
+    function scaleBack(ctx) {
+        ctx.scale(1 / camera.scale, 1 / camera.scale);
+    }
     function fromCamera(ctx) {
-        ctx.translate(cameraX, cameraY);
+        ctx.translate(camera.x, camera.y);
         scaleBack(ctx);
         ctx.translate(-mainCanvas.width / 2, -mainCanvas.height / 2);
     }
@@ -790,8 +810,8 @@
         var width = 200 * (border.width / border.height);
         var height = 40 * (border.height / border.width);
 
-        var beginX = mainCanvas.width / viewMult - width;
-        var beginY = mainCanvas.height / viewMult - height;
+        var beginX = mainCanvas.width / camera.viewportScale - width;
+        var beginY = mainCanvas.height / camera.viewportScale - height;
 
         if (settings.showMinimap) {
           mainCtx.font = "15px Ubuntu";
@@ -799,13 +819,13 @@
           beginY = beginY - 194 * border.height / border.width;
           mainCtx.textAlign = "right";
           mainCtx.fillStyle = settings.darkTheme ? "#AAA" : "#555";
-          mainCtx.fillText("X: " + ~~cameraX + ", Y: " + ~~cameraY, beginX + width / 2, beginY + height / 2);
+          mainCtx.fillText("X: " + ~~camera.x + ", Y: " + ~~camera.y, beginX + width / 2, beginY + height / 2);
         } else {
           mainCtx.fillStyle = "#000";
           mainCtx.globalAlpha = 0.4;
           mainCtx.fillRect(beginX, beginY, width, height);
           mainCtx.globalAlpha = 1;
-          drawRaw(mainCtx, beginX + width / 2, beginY + height / 2, "X: " + ~~cameraX + ", Y: " + ~~cameraY);
+          drawRaw(mainCtx, beginX + width / 2, beginY + height / 2, "X: " + ~~camera.x + ", Y: " + ~~camera.y);
         }
     }
 
@@ -876,9 +896,10 @@
         mainCtx.globalAlpha = 0.2;
         var step = 50,
             i,
-            cW = mainCanvas.width / cameraZ, cH = mainCanvas.height / cameraZ,
-            startLeft = (-cameraX + cW / 2) % step,
-            startTop = (-cameraY + cH / 2) % step;
+            cW = mainCanvas.width / camera.scale,
+            cH = mainCanvas.height / camera.scale,
+            startLeft = (-camera.x + cW / 2) % step,
+            startTop = (-camera.y + cH / 2) % step;
 
         scaleForth(mainCtx);
         mainCtx.beginPath();
@@ -890,7 +911,6 @@
             mainCtx.moveTo(0, i);
             mainCtx.lineTo(cW, i);
         }
-        mainCtx.closePath();
         mainCtx.stroke();
         mainCtx.restore();
     }
@@ -922,11 +942,13 @@
     function drawMinimap() {
         if (border.centerX !== 0 || border.centerY !== 0 || !settings.showMinimap) return;
         mainCtx.save();
+        mainCtx.resetTransform();
         var targetSize = 200;
-        var width = targetSize * (border.width / border.height);
-        var height = targetSize * (border.height / border.width);
-        var beginX = mainCanvas.width / viewMult - width;
-        var beginY = mainCanvas.height / viewMult - height;
+        var borderAR = border.width / border.height; // aspect ratio
+        var width = targetSize * borderAR * camera.viewportScale;
+        var height = targetSize / borderAR * camera.viewportScale;
+        var beginX = mainCanvas.width - width;
+        var beginY = mainCanvas.height - height;
 
         mainCtx.fillStyle = "#000";
         mainCtx.globalAlpha = 0.4;
@@ -956,8 +978,8 @@
         var yScaler = height / border.height;
         var halfWidth = border.width / 2;
         var halfHeight = border.height / 2;
-        var myPosX = beginX + (cameraX + halfWidth) * xScaler;
-        var myPosY = beginY + (cameraY + halfHeight) * yScaler;
+        var myPosX = beginX + (camera.x + halfWidth) * xScaler;
+        var myPosY = beginY + (camera.y + halfHeight) * yScaler;
         mainCtx.beginPath();
         if (cells.mine.length) {
             for (var i = 0; i < cells.mine.length; i++) {
@@ -1010,14 +1032,21 @@
     };
 
     function drawGame() {
-        stats.framesPerSecond += (1000 / Math.max(Date.now() - syncAppStamp, 1) - stats.framesPerSecond) / 10;
+        stats.fps += (1000 / Math.max(Date.now() - syncAppStamp, 1) - stats.fps) / 10;
         syncAppStamp = Date.now();
 
         var drawList = cells.list.slice(0).sort(cellSort);
         for (var i = 0, l = drawList.length; i < l; i++)
             drawList[i].update(syncAppStamp);
         cameraUpdate();
-        if (settings.jellyPhysics) updateQuadtree();
+        if (settings.jellyPhysics) {
+            updateQuadtree();
+            for (var i = 0, l = drawList.length; i < l; ++i) {
+                var cell = drawList[i];
+                cell.updateNumPoints();
+                cell.movePoints();
+            }
+        }
 
         mainCtx.save();
 
@@ -1033,7 +1062,8 @@
             drawList[i].draw(mainCtx);
 
         fromCamera(mainCtx);
-        mainCtx.scale(viewMult, viewMult);
+        quadtree = null;
+        mainCtx.scale(camera.viewportScale, camera.viewportScale);
 
         var height = 2;
         mainCtx.fillStyle = settings.darkTheme ? "#FFF" : "#000";
@@ -1044,7 +1074,7 @@
             height += 30;
         }
         mainCtx.font = "20px Ubuntu";
-        var gameStatsText = ~~stats.framesPerSecond + " FPS";
+        var gameStatsText = ~~stats.fps + " FPS";
         if (!isNaN(stats.latency)) gameStatsText += " " + stats.latency + "ms ping";
         mainCtx.fillText(gameStatsText, 2, height);
         height += 24;
@@ -1054,14 +1084,14 @@
         if (leaderboard.visible)
             mainCtx.drawImage(
                 leaderboard.canvas,
-                mainCanvas.width / viewMult - 10 - leaderboard.canvas.width,
+                mainCanvas.width / camera.viewportScale - 10 - leaderboard.canvas.width,
                 10);
         if (settings.showChat && (chat.visible || isTyping)) {
             mainCtx.globalAlpha = isTyping ? 1 : Math.max(1000 - syncAppStamp + chat.waitUntil, 0) / 1000;
             mainCtx.drawImage(
                 chat.canvas,
-                10 / viewMult,
-                (mainCanvas.height - 55) / viewMult - chat.canvas.height
+                10 / camera.viewportScale,
+                (mainCanvas.height - 55) / camera.viewportScale - chat.canvas.height
             );
             mainCtx.globalAlpha = 1;
         }
@@ -1106,45 +1136,32 @@
                 y += cell.y;
                 s += cell.s;
             }
-            targetX = x / l;
-            targetY = y / l;
-            targetZ = Math.pow(Math.min(64 / s, 1), .4);
-            cameraX += (targetX - cameraX) / 2;
-            cameraY += (targetY - cameraY) / 2;
+            camera.target.x = x / l;
+            camera.target.y = y / l;
+            camera.sizeScale = Math.pow(Math.min(64 / s, 1), 0.4);
+            camera.target.scale = camera.sizeScale;
+            camera.target.scale *= camera.viewportScale * camera.userZoom;
+            camera.x = (camera.target.x + camera.x) / 2;
+            camera.y = (camera.target.y + camera.y) / 2;
             stats.score = score;
             stats.maxScore = Math.max(stats.maxScore, score);
         } else {
             stats.score = NaN;
             stats.maxScore = 0;
-            cameraX += (targetX - cameraX) / 20;
-            cameraY += (targetY - cameraY) / 20;
+            camera.x += (camera.target.x - camera.x) / 20;
+            camera.y += (camera.target.y - camera.y) / 20;
         }
-        cameraZ += (targetZ * viewMult * mouseZ - cameraZ) / 9;
-        cameraZInvd = 1 / cameraZ;
+        camera.scale += (camera.target.scale - camera.scale) / 9;
     }
     function sqDist(a, b) {
         return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
     }
     function updateQuadtree() {
-        var minX = Number.POSITIVE_INFINITY;
-        var minY = Number.POSITIVE_INFINITY;
-        var maxX = Number.NEGATIVE_INFINITY;
-        var maxY = Number.NEGATIVE_INFINITY;
-        var largestSize = 0;
-        for (var i = 0; i < cells.list.length; ++i) {
-            var cell = cells.list[i];
-            largestSize = Math.max(cell.s, largestSize);
-            minX = Math.min(cell.x, minX);
-            minY = Math.min(cell.y, minY);
-            maxX = Math.max(cell.x, maxX);
-            maxY = Math.max(cell.y, maxY);
-        }
-        largestSize += 100;
-        var x = minX - largestSize;
-        var y = minY - largestSize;
-        var w = (maxX + largestSize) - x;
-        var h = (maxY + largestSize) - y;
-        quadtree = new PointQuadTree(x, y, w, h, 32);
+        var w = 1920 / camera.sizeScale;
+        var h = 1080 / camera.sizeScale;
+        var x = (camera.x - w / 2);
+        var y = (camera.y - h / 2);
+        quadtree = new PointQuadTree(x, y, w, h, QUADTREE_MAX_POINTS);
         for (var i = 0; i < cells.list.length; ++i) {
             var cell = cells.list[i];
             for (var n = 0; n < cell.points.length; ++n) {
@@ -1202,17 +1219,12 @@
             this.s = this.os + (this.ns - this.os) * dt;
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
-            if (settings.jellyPhysics) {
-                this.updateNumPoints();
-                this.movePoints();
-            } else if (this.points.length) {
-                this.points = [];
-                this.pointsVel = [];
-            }
         },
         updateNumPoints: function() {
-            var numPoints = Math.max(this.s * cameraZ | 0, 5);
-            if (this.jagged) numPoints = 120;
+            var numPoints = this.s * camera.scale | 0;
+            numPoints = Math.max(numPoints, CELL_POINTS_MIN);
+            numPoints = Math.min(numPoints, CELL_POINTS_MAX);
+            if (this.jagged) numPoints = VIRUS_POINTS;
             while (this.points.length > numPoints) {
                 var i = Math.random() * this.points.length | 0;
                 this.points.splice(i, 1);
@@ -1328,7 +1340,7 @@
 
             ctx.beginPath();
             if (this.jagged) ctx.lineJoin = "miter";
-            if (settings.jellyPhysics) {
+            if (settings.jellyPhysics && this.points.length) {
                 var point = this.points[0];
                 ctx.moveTo(point.x, point.y);
                 for (var i = 0; i < this.points.length; ++i) {
@@ -1362,10 +1374,10 @@
                     ctx.save();
                     ctx.clip();
                     scaleBack(ctx);
-                    var sScaled = this.s * cameraZ;
+                    var sScaled = this.s * camera.scale;
                     ctx.drawImage(skin,
-                        this.x * cameraZ - sScaled,
-                        this.y * cameraZ - sScaled,
+                        this.x * camera.scale - sScaled,
+                        this.y * camera.scale - sScaled,
                         sScaled *= 2, sScaled);
                     scaleForth(ctx);
                     ctx.restore();
@@ -1560,9 +1572,9 @@
     }
     function handleScroll(event) {
         if (event.target !== mainCanvas) return;
-        mouseZ *= event.deltaY > 0 ? 0.8 : 1.2;
-        mouseZ = Math.max(mouseZ, settings.moreZoom ? 0.1 : 1);
-        mouseZ = Math.min(mouseZ, 4);
+        camera.userZoom *= event.deltaY > 0 ? 0.8 : 1.2;
+        camera.userZoom = Math.max(camera.userZoom, settings.moreZoom ? 0.1 : 1);
+        camera.userZoom = Math.min(camera.userZoom, 4);
     }
 
     function init() {
@@ -1599,14 +1611,14 @@
         };
         setInterval(function() {
             sendMouseMove(
-                (mouseX - mainCanvas.width / 2) / cameraZ + cameraX,
-                (mouseY - mainCanvas.height / 2) / cameraZ + cameraY
+                (mouseX - mainCanvas.width / 2) / camera.scale + camera.x,
+                (mouseY - mainCanvas.height / 2) / camera.scale + camera.y
             );
         }, 40);
         window.onresize = function() {
-            var cW = mainCanvas.width = window.innerWidth,
-                cH = mainCanvas.height = window.innerHeight;
-            viewMult = Math.sqrt(Math.min(cH / 1080, cW / 1920));
+            var width = mainCanvas.width = window.innerWidth;
+            var height = mainCanvas.height = window.innerHeight;
+            camera.viewportScale = Math.max(width / 1920, height / 1080);
         };
         window.onresize();
         var mobileStuff = byId("mobileStuff");

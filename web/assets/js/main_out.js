@@ -969,9 +969,9 @@
         mainCtx.font = sectorNameSize + "px Ubuntu";
 
         for (var i = 0; i < sectorCount; i++) {
-            var x = sectorWidth / 2 + i * sectorWidth;
+            var x = (i + 0.5) * sectorWidth;
             for (var j = 0; j < sectorCount; j++) {
-                var y = sectorHeight / 2 + j * sectorHeight;
+                var y = (j + 0.5) * sectorHeight;
                 mainCtx.fillText(sectorNames[0][i] + sectorNames[1][j], beginX + x, beginY + y);
             }
         }
@@ -982,6 +982,16 @@
         var halfHeight = border.height / 2;
         var myPosX = beginX + (camera.x + halfWidth) * xScaler;
         var myPosY = beginY + (camera.y + halfHeight) * yScaler;
+
+        var xIndex = (myPosX - beginX) / sectorWidth | 0;
+        var yIndex = (myPosY - beginY) / sectorHeight | 0;
+        var lightX = beginX + xIndex * sectorWidth;
+        var lightY = beginY + yIndex * sectorHeight;
+        mainCtx.fillStyle = "yellow";
+        mainCtx.globalAlpha = 0.3;
+        mainCtx.fillRect(lightX, lightY, sectorWidth, sectorHeight);
+        mainCtx.globalAlpha = 1;
+
         mainCtx.beginPath();
         if (cells.mine.length) {
             for (var i = 0; i < cells.mine.length; i++) {

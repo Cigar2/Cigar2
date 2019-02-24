@@ -804,7 +804,7 @@
         ctx.fillStyle = settings.darkTheme ? "#AAA" : "#555";
         ctx.textBaseline = "top";
         for (var i = 0; i < rows.length; i++)
-            ctx.fillText(rows[i], 2, -2 + i * (14 + 2));
+            ctx.fillText(rows[i], 2, -1 + i * (14 + 2));
     }
 
     function drawPosition() {

@@ -40,6 +40,8 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    scrollbar-color: #9090a0 #fff;
+    scrollbar-width: thin;
 }
 #skinsUL::-webkit-scrollbar {
     width: 12px;

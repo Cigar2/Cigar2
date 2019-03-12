@@ -239,7 +239,7 @@
             25: new Uint8Array([25]),
             254: new Uint8Array([254])
         },
-        KEY_TO_CODE = {
+        KEY_TO_OPCODE = {
             " ": UINT8_CACHE[17],
             "w": UINT8_CACHE[21],
             "q": UINT8_CACHE[18],
@@ -251,6 +251,15 @@
         IE_KEYS = {
             "spacebar": " ",
             "esc": "escape"
+        },
+        CODE_TO_KEY = {
+            "Space": " ",
+            "KeyW": "w",
+            "KeyQ": "q",
+            "KeyE": "e",
+            "KeyR": "r",
+            "KeyT": "t",
+            "KeyP": "p"
         };
 
     function wsCleanup() {
@@ -1549,7 +1558,12 @@
         ctx.restore();
     }
     function keydown(event) {
-        var key = event.key.toLowerCase();
+        var key;
+        if (CODE_TO_KEY[event.code]) {
+            key = CODE_TO_KEY[event.code];
+        } else {
+            key = event.key.toLowerCase();
+        }
         if (IE_KEYS.hasOwnProperty(key)) key = IE_KEYS[key]; // IE fix
         if (key == "enter") {
             if (escOverlayShown || !settings.showChat) return;
@@ -1567,7 +1581,7 @@
         } else {
             if (isTyping || escOverlayShown) return;
             if (pressed.hasOwnProperty(key)) pressed[key] = true;
-            var code = KEY_TO_CODE[key];
+            var code = KEY_TO_OPCODE[key];
             if (code !== undefined) wsSend(code);
             if (key == "w") macroIntervalID = setInterval(function() {
                 wsSend(code);
@@ -1576,7 +1590,12 @@
         }
     }
     function keyup(event) {
-        var key = event.key.toLowerCase();
+        var key;
+        if (CODE_TO_KEY[event.code]) {
+            key = CODE_TO_KEY[event.code];
+        } else {
+            key = event.key.toLowerCase();
+        }
         if (IE_KEYS.hasOwnProperty(key)) key = IE_KEYS[key]; // IE fix
         if (pressed.hasOwnProperty(key)) pressed[key] = false;
         if (key == "q") wsSend(UINT8_CACHE[19]);

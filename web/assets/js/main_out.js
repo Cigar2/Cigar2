@@ -582,7 +582,7 @@
             scale: 1
         },
         viewportScale: 1,
-        userZoom: 1,
+        userZoom: 0.8,
         sizeScale: 1,
         scale: 1
     };
@@ -599,9 +599,9 @@
         gamemode: "",
         showSkins: true,
         showNames: true,
-        darkTheme: false,
+        darkTheme: true,
         showColor: true,
-        showMass: false,
+        showMass: true,
         _showChat: true,
         get showChat() {
             return this._showChat;
@@ -613,14 +613,14 @@
         },
         showMinimap: true,
         showPosition: false,
-        showBorder: false,
-        showGrid: true,
-        playSounds: false,
+        showBorder: true,
+        showGrid: false,
+        playSounds: true,
         soundsVolume: 0.5,
         moreZoom: false,
         fillSkin: true,
-        backgroundSectors: false,
-        jellyPhysics: true
+        backgroundSectors: true,
+        jellyPhysics: false
     };
     var pressed = {
         " ": false,
@@ -1044,9 +1044,8 @@
     };
 
     function drawGame() {
-        stats.fps += (1000 / Math.max(Date.now() - syncAppStamp, 1) - stats.fps) / 10;
+        stats.fps += (2000 / Math.max(Date.now() - syncAppStamp, 1) - stats.fps) / 10;
         syncAppStamp = Date.now();
-
         var drawList = cells.list.slice(0).sort(cellSort);
         for (var i = 0, l = drawList.length; i < l; i++)
             drawList[i].update(syncAppStamp);
@@ -1062,7 +1061,7 @@
 
         mainCtx.save();
 
-        mainCtx.fillStyle = settings.darkTheme ? "#111" : "#F2FBFF";
+        mainCtx.fillStyle = settings.darkTheme ? "#222" : "#F2FBFF";
         mainCtx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
         if (settings.showGrid) drawGrid();
         if (settings.backgroundSectors) drawBackgroundSectors();
@@ -1196,6 +1195,7 @@
         this.points = [];
         this.pointsVel = [];
     }
+  
     Cell.prototype = {
         destroyed: false,
         id: 0, diedBy: 0,
@@ -1220,7 +1220,7 @@
         update: function(relativeTime) {
             var dt = (relativeTime - this.updated) / 120;
             dt = Math.max(Math.min(dt, 1), 0);
-            if (this.destroyed && Date.now() > this.dead + 200)
+            if (this.destroyed && Date.now() > this.dead)
                 cells.list.remove(this);
             else if (this.diedBy && cells.byId.hasOwnProperty(this.diedBy)) {
                 this.nx = cells.byId[this.diedBy].x;
@@ -1229,8 +1229,8 @@
             this.x = this.ox + (this.nx - this.ox) * dt;
             this.y = this.oy + (this.ny - this.oy) * dt;
             this.s = this.os + (this.ns - this.os) * dt;
-            this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
-            this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
+            this.nameSize = this.ns / 3;
+            this.drawNameSize = this.s / 3;
         },
         updateNumPoints: function() {
             var numPoints = this.s * camera.scale | 0;
@@ -1344,35 +1344,23 @@
             ctx.restore();
         },
         drawShape: function(ctx) {
+            
+          
             ctx.fillStyle = settings.showColor ? this.color : Cell.prototype.color;
             ctx.strokeStyle = settings.showColor ? this.sColor : Cell.prototype.sColor;
-            ctx.lineWidth = Math.max(~~(this.s / 50), 10);
-            if (this.s > 20)
-                this.s -= ctx.lineWidth / 2;
-
             ctx.beginPath();
-            if (this.jagged) ctx.lineJoin = "miter";
-            if (settings.jellyPhysics && this.points.length) {
-                var point = this.points[0];
-                ctx.moveTo(point.x, point.y);
-                for (var i = 0; i < this.points.length; ++i) {
-                    var point = this.points[i];
-                    ctx.lineTo(point.x, point.y);
-                }
-            } else if (this.jagged) {
-                var pointCount = 120;
-                var incremental = PI_2 / pointCount;
-                ctx.moveTo(this.x, this.y + this.s + 3);
-                for (var i = 1; i < pointCount; i++) {
-                    var angle = i * incremental;
-                    var dist = this.s - 3 + (i % 2 === 0) * 6;
-                    ctx.lineTo(
-                        this.x + dist * Math.sin(angle),
-                        this.y + dist * Math.cos(angle)
-                    )
-                }
-                ctx.lineTo(this.x, this.y + this.s + 3);
-            } else ctx.arc(this.x, this.y, this.s, 0, PI_2, false);
+            if (this.jagged) {
+                ctx.fillStyle = 'rgba(32, 207, 255, 0.5)';
+                ctx.strokeStyle = '#20CFFF';
+                ctx.lineWidth = 8, 8; 
+			        	ctx.arc(this.x, this.y, this.s + 3, 0, PI_2, false);
+				        ctx.stroke();
+            } else if (camera.scale < 0.2)
+              {
+              ctx.arc(this.x, this.y, this.s, 0, PI_2, false);
+              } else {
+              ctx.arc(this.x, this.y, this.s, 0, PI_2, false);
+              }
             ctx.closePath();
 
             if (this.destroyed)
@@ -1394,14 +1382,12 @@
                     scaleForth(ctx);
                     ctx.restore();
                 }
-            } else if (!settings.fillSkin) ctx.fill();
-            if (this.s > 20) {
-                ctx.stroke();
-                this.s += ctx.lineWidth / 2;
-            }
+            } 
         },
         drawText: function(ctx) {
-            if (this.s < 20 || this.jagged) return;
+           
+          
+            if (camera.scale < 0.2) return;    
             var y = this.y;
             if (this.name && settings.showNames) {
                 drawText(ctx, false, this.x, this.y, this.nameSize, this.drawNameSize, this.name);
@@ -1589,7 +1575,8 @@
         camera.userZoom = Math.min(camera.userZoom, 4);
     }
 
-    function init() {
+    function init() {      
+      
         mainCanvas = document.getElementById("canvas");
         mainCtx = mainCanvas.getContext("2d");
         chatBox = byId("chat_textbox");

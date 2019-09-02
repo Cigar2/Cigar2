@@ -1227,6 +1227,7 @@
             }
         },
         update: function(relativeTime) {
+            var prevFrameSize = this.s;
             var dt = (relativeTime - this.updated) / 120;
             dt = Math.max(Math.min(dt, 1), 0);
             if (this.destroyed && Date.now() > this.dead + 200)
@@ -1240,6 +1241,15 @@
             this.s = this.os + (this.ns - this.os) * dt;
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
+
+            if (settings.jellyPhysics && this.points.length) {
+                if (this.ns == this.os) return;
+                var ratio = this.s / prevFrameSize;
+                if (ratio == 1) return;
+                for (var n = 0; n < this.points.length; ++n) {
+                    this.points[n].rl *= ratio;
+                }
+            }
         },
         updateNumPoints: function() {
             var numPoints = this.s * camera.scale | 0;

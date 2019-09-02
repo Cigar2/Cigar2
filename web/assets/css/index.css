@@ -98,6 +98,7 @@ input[type=checkbox] {
 #gallery-btn {
     width: 100%;
     margin-bottom: 5px;
+    display: none; /* Visible when skins are loaded */
 }
 #touchpad, #touchCircle, #splitBtn, #ejectBtn {
     position: fixed;

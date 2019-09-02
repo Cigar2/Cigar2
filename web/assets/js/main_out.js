@@ -1388,22 +1388,17 @@
                 ctx.globalAlpha = Math.max(120 - Date.now() + this.dead, 0) / 120;
             else ctx.globalAlpha = Math.min(Date.now() - this.born, 120) / 120;
 
-            if (settings.fillSkin) ctx.fill();
-            if (settings.showSkins && this.skin) {
-                var skin = loadedSkins[this.skin];
-                if (skin && skin.complete && skin.width && skin.height) {
-                    ctx.save();
-                    ctx.clip();
-                    scaleBack(ctx);
-                    var sScaled = this.s * camera.scale;
-                    ctx.drawImage(skin,
-                        this.x * camera.scale - sScaled,
-                        this.y * camera.scale - sScaled,
-                        sScaled *= 2, sScaled);
-                    scaleForth(ctx);
-                    ctx.restore();
-                }
-            } else if (!settings.fillSkin) ctx.fill();
+            var skinImage = loadedSkins[this.skin];
+            if (settings.showSkins && this.skin && skinImage &&
+                skinImage.complete && skinImage.width && skinImage.height)
+            {
+                if (settings.fillSkin) ctx.fill();
+                ctx.save(); // for the clip
+                ctx.clip();
+                ctx.drawImage(skinImage, this.x - this.s, this.y - this.s,
+                    this.s * 2, this.s * 2);
+                ctx.restore();
+            } else ctx.fill();
             if (this.s > 20) {
                 ctx.stroke();
                 this.s += ctx.lineWidth / 2;

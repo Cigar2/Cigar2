@@ -1228,6 +1228,7 @@
             }
         },
         update: function(relativeTime) {
+            var prevFrameSize = this.s;
             var dt = (relativeTime - this.updated) / 120;
             dt = Math.max(Math.min(dt, 1), 0);
             if (this.destroyed && Date.now() > this.dead + 200)
@@ -1241,6 +1242,15 @@
             this.s = this.os + (this.ns - this.os) * dt;
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
+
+            if (settings.jellyPhysics && this.points.length) {
+                if (this.ns == this.os) return;
+                var ratio = this.s / prevFrameSize;
+                if (ratio == 1) return;
+                for (var n = 0; n < this.points.length; ++n) {
+                    this.points[n].rl *= ratio;
+                }
+            }
         },
         updateNumPoints: function() {
             var numPoints = this.s * camera.scale | 0;
@@ -1389,22 +1399,17 @@
                 ctx.globalAlpha = Math.max(120 - Date.now() + this.dead, 0) / 120;
             else ctx.globalAlpha = Math.min(Date.now() - this.born, 120) / 120;
 
-            if (settings.fillSkin) ctx.fill();
-            if (settings.showSkins && this.skin) {
-                var skin = loadedSkins[this.skin];
-                if (skin && skin.complete && skin.width && skin.height) {
-                    ctx.save();
-                    ctx.clip();
-                    scaleBack(ctx);
-                    var sScaled = this.s * camera.scale;
-                    ctx.drawImage(skin,
-                        this.x * camera.scale - sScaled,
-                        this.y * camera.scale - sScaled,
-                        sScaled *= 2, sScaled);
-                    scaleForth(ctx);
-                    ctx.restore();
-                }
-            } else if (!settings.fillSkin) ctx.fill();
+            var skinImage = loadedSkins[this.skin];
+            if (settings.showSkins && this.skin && skinImage &&
+                skinImage.complete && skinImage.width && skinImage.height)
+            {
+                if (settings.fillSkin) ctx.fill();
+                ctx.save(); // for the clip
+                ctx.clip();
+                ctx.drawImage(skinImage, this.x - this.s, this.y - this.s,
+                    this.s * 2, this.s * 2);
+                ctx.restore();
+            } else ctx.fill();
             if (this.s > 20) {
                 ctx.stroke();
                 this.s += ctx.lineWidth / 2;

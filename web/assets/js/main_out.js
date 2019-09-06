@@ -597,7 +597,6 @@
     };
     var mouseX = NaN;
     var mouseY = NaN;
-    var skinList = [];
     var macroCooldown = 1000 / 7;
     var macroIntervalID;
     var quadtree;
@@ -646,7 +645,9 @@
     var pelletSound = new Sound("./assets/sound/pellet.mp3", 0.5, 10);
 
     request("skinList.txt", function(data) {
-        var skins = data.split(",");
+        var skins = data.split(",").filter(name => name.length > 0);
+        if (skins.length == 0) return;
+        byId("gallery-btn").style.display = "inline-block";
         var stamp = Date.now();
         for (var i = 0; i < skins.length; i++)
             knownSkins[skins[i]] = stamp;

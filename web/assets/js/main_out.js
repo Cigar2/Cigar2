@@ -638,6 +638,7 @@
         "t": false,
         "p": false,
         "q": false,
+        "enter": false,
         "escape": false
     };
 
@@ -1563,7 +1564,7 @@
         }
         ctx.restore();
     }
-    function keydown(event) {
+    function processKey(event) {
         var key;
         if (CODE_TO_KEY[event.code]) {
             key = CODE_TO_KEY[event.code];
@@ -1571,6 +1572,12 @@
             key = event.key.toLowerCase();
         }
         if (IE_KEYS.hasOwnProperty(key)) key = IE_KEYS[key]; // IE fix
+        return key;
+    }
+    function keydown(event) {
+        var key = processKey(event);
+        if (pressed[key]) return;
+        if (pressed.hasOwnProperty(key)) pressed[key] = true;
         if (key == "enter") {
             if (escOverlayShown || !settings.showChat) return;
             if (isTyping) {
@@ -1579,14 +1586,10 @@
                 if (text.length > 0) sendChat(text);
                 chatBox.value = "";
             } else chatBox.focus();
-        } else if (pressed[key]) {
-            return;
         } else if (key == "escape") {
-            pressed[key] = true;
             escOverlayShown ? hideESCOverlay() : showESCOverlay();
         } else {
             if (isTyping || escOverlayShown) return;
-            if (pressed.hasOwnProperty(key)) pressed[key] = true;
             var code = KEY_TO_OPCODE[key];
             if (code !== undefined) wsSend(code);
             if (key == "w") macroIntervalID = setInterval(function() {
@@ -1596,16 +1599,10 @@
         }
     }
     function keyup(event) {
-        var key;
-        if (CODE_TO_KEY[event.code]) {
-            key = CODE_TO_KEY[event.code];
-        } else {
-            key = event.key.toLowerCase();
-        }
-        if (IE_KEYS.hasOwnProperty(key)) key = IE_KEYS[key]; // IE fix
+        var key = processKey(event);
         if (pressed.hasOwnProperty(key)) pressed[key] = false;
         if (key == "q") wsSend(UINT8_CACHE[19]);
-        if (key == "w") clearInterval(macroIntervalID);
+        else if (key == "w") clearInterval(macroIntervalID);
     }
     function handleScroll(event) {
         if (event.target !== mainCanvas) return;

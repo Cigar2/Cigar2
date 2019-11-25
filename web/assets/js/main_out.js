@@ -1699,11 +1699,12 @@
         gameReset();
         showESCOverlay();
 
-        if (window.location.search) {
-            var div = /ip=([\w\W]+):([0-9]+)/.exec(window.location.search.slice(1))
-            if (div) wsInit(div[1] + ":" + div[2]);
-        }
-        window.setserver(byId("gamemode").value);
+        var regex = /ip=([\w\W]+):([0-9]+)/;
+        var args = window.location.search;
+        var div;
+        if (args && (div = regex.exec(args.slice(1)))) {
+            wsInit(div[1] + ":" + div[2]);
+        } else window.setserver(byId("gamemode").value);
         window.requestAnimationFrame(drawGame);
         log.info("init done in " + (Date.now() - LOAD_START) + "ms");
     }

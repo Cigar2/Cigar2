@@ -276,7 +276,8 @@
             wsCleanup();
         }
         byId("connecting").show(0.5);
-        ws = new WebSocket("ws" + (USE_HTTPS ? "s" : "") + "://" + (wsUrl = url));
+        wsUrl = url;
+        ws = new WebSocket("ws" + (USE_HTTPS ? "s" : "") + "://" + url);
         ws.binaryType = "arraybuffer";
         ws.onopen = wsOpen;
         ws.onmessage = wsMessage;
@@ -284,7 +285,7 @@
         ws.onclose = wsClose;
     }
     function wsOpen() {
-        disconnectDelay = 1000;
+        reconnectDelay = 1000;
         byId("connecting").hide();
         wsSend(SEND_254);
         wsSend(SEND_255);
@@ -293,13 +294,13 @@
         log.warn(error);
     }
     function wsClose(e) {
+        if (e.currentTarget != ws) return;
         log.debug("ws disconnected " + e.code + " '" + e.reason + "'");
         wsCleanup();
         gameReset();
         setTimeout(function() {
-            if (ws && ws.readyState === 1) return;
-            wsInit(wsUrl);
-        }, disconnectDelay *= 1.5);
+            setserver(wsUrl);
+        }, reconnectDelay *= 1.5);
     }
     function wsSend(data) {
         if (!ws) return;
@@ -567,7 +568,7 @@
 
     var ws = null;
     var wsUrl = null;
-    var disconnectDelay = 1000;
+    var reconnectDelay = 1000;
 
     var syncUpdStamp = Date.now();
     var syncAppStamp = Date.now();
@@ -1699,18 +1700,18 @@
         gameReset();
         showESCOverlay();
 
-        var regex = /ip=([\w\W]+):([0-9]+)/;
+        var regex = /ip=([\w\W]+:[0-9]+)/;
         var args = window.location.search;
         var div;
         if (args && (div = regex.exec(args.slice(1)))) {
-            wsInit(div[1] + ":" + div[2]);
+            window.setserver(div[1]);
         } else window.setserver(byId("gamemode").value);
         window.requestAnimationFrame(drawGame);
         log.info("init done in " + (Date.now() - LOAD_START) + "ms");
     }
-    window.setserver = function(arg) {
-        if (wsUrl === arg) return;
-        wsInit(arg);
+    window.setserver = function(url) {
+        if (url == wsUrl && ws && ws.readyState <= WebSocket.OPEN) return;
+        wsInit(url);
     };
     window.spectate = function(a) {
         wsSend(UINT8_CACHE[1]);

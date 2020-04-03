@@ -1,1 +1,1 @@
-doge,pokerface,pikachu,cgi,batman2,chrome,firefox,javascript,legoman,steam,earth,soldier
+doge,pokerface,pikachu,cgi,batman2,chrome,javascript,legoman,steam,earth,soldier

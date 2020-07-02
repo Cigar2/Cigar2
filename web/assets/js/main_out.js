@@ -1706,7 +1706,7 @@
         if (args && (div = regex.exec(args.slice(1)))) {
             window.setserver(div[1]);
         } else window.setserver(byId("gamemode").value);
-        window.requestAnimationFrame(drawGame);
+        drawGame();
         log.info("init done in " + (Date.now() - LOAD_START) + "ms");
     }
     window.setserver = function(url) {

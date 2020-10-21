@@ -1624,7 +1624,7 @@
         document.addEventListener("wheel", handleScroll, {passive: true});
         byId("play-btn").addEventListener("click", function() {
             if (settings.skin) {
-                sendPlay("{" + settings.skin + "}" + settings.nick);
+                sendPlay("<" + settings.skin + ">" + settings.nick);
             } else {
                 sendPlay(settings.nick);
             }

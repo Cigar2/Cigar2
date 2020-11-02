@@ -15,5 +15,8 @@
   "repository": {
     "url": "https://github.com/Cigar2/Cigar2"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^7.12.1"
+  }
 }

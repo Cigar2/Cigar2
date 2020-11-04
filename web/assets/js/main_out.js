@@ -1230,11 +1230,11 @@
     }
 
     class Cell {
-        static parseName(value = '') { // static method
-            const nameAndSkin = /^(?:\{([^}]*)\})?([^]*)/.exec(value);
+        static parseName(value) { // static method
+            const [, skin, name] = /^(?:\{([^}]*)\})?([^]*)/.exec(value || '');
             return {
-                name: nameAndSkin[2].trim(),
-                skin: (nameAndSkin[1] || '').trim() || nameAndSkin[2]
+                name: name.trim(),
+                skin: (skin || '').trim() || name,
             };
         }
         constructor(id, x, y, s, name, color, skin, flags) {

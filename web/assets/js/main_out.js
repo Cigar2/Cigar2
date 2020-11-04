@@ -63,18 +63,20 @@
             if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
             if (hex.length !== 6) throw new Error(`Invalid color ${color}`);
             const v = parseInt(hex, 16);
-            return new Color(v >>> 16 & 255, v >>> 8 & 255, v & 255);
+            return new Color(v >>> 16 & 255, v >>> 8 & 255, v & 255, hex);
         }
-        constructor(r, g, b) {
+        constructor(r, g, b, hex) {
             this.r = r;
             this.g = g;
             this.b = b;
+            if (hex) this.hexCache = hex;
         }
         clone() {
             return new Color(this.r, this.g, this.b);
         }
         toHex() {
-            return `#${(1 << 24 | this.r << 16 | this.g << 8 | this.b).toString(16).slice(1)}`;
+            if (this.hexCache) return this.hexCache;
+            return this.hexCache = `#${(1 << 24 | this.r << 16 | this.g << 8 | this.b).toString(16).slice(1)}`;
         }
         darken(grade = 1) {
             grade /= 10;

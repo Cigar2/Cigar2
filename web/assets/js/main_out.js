@@ -1637,7 +1637,7 @@
             if (isTyping || escOverlayShown) return;
             const code = KEY_TO_OPCODE[key];
             if (code !== undefined) wsSend(code);
-            if (key == 'w') macroIntervalID = setInterval(() => wsSend(code)), macroCooldown;
+            if (key == 'w') macroIntervalID = setInterval(() => wsSend(code), macroCooldown);
             if (key == 'q') minionControlled = !minionControlled;
         }
     }
@@ -1699,7 +1699,8 @@
         };
         window.onresize();
         const mobileStuff = byId('mobileStuff');
-        // const touchpad = byId('touchpad');
+        // eslint-disable-next-line
+        const touchpad = byId('touchpad');
         const touchCircle = byId('touchCircle');
         const touchSize = .2;
         let touched = false;

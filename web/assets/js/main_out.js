@@ -300,7 +300,7 @@
     }
 
     function wsClose(e) {
-        if (e.currentTarget != ws) return;
+        if (e.currentTarget !== ws) return;
         Logger.debug(`WebSocket disconnected ${e.code} (${e.reason})`);
         wsCleanup();
         gameReset();
@@ -678,7 +678,7 @@
 
     request('skinList.txt', (data) => {
         const skins = data.split(',').filter(name => name.length > 0);
-        if (skins.length == 0) return;
+        if (skins.length === 0) return;
         byId('gallery-btn').style.display = 'inline-block';
         const stamp = Date.now();
         for (let i = 0; i < skins.length; i++) {
@@ -1290,9 +1290,9 @@
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
 
             if (settings.jellyPhysics && this.points.length) {
-                if (this.ns == this.os) return;
+                if (this.ns === this.os) return;
                 const ratio = this.s / prevFrameSize;
-                if (ratio == 1) return;
+                if (ratio === 1) return;
                 for (let i = 0; i < this.points.length; ++i) {
                     this.points[i].rl *= ratio;
                 }
@@ -1364,7 +1364,7 @@
 
                 const angle = 2 * Math.PI * i / this.points.length;
                 let rl = curP.rl;
-                if (this.jagged && i % 2 == 0) {
+                if (this.jagged && i % 2 === 0) {
                     rl += 5;
                 }
                 curP.x = this.x + Math.cos(angle) * rl;
@@ -1624,7 +1624,7 @@
         const key = processKey(event);
         if (pressed[key]) return;
         if (Object.hasOwnProperty.call(pressed, key)) pressed[key] = true;
-        if (key == 'enter') {
+        if (key === 'enter') {
             if (escOverlayShown || !settings.showChat) return;
             if (isTyping) {
                 chatBox.blur();
@@ -1633,21 +1633,21 @@
             } else {
                 chatBox.focus();
             }
-        } else if (key == 'escape') {
+        } else if (key === 'escape') {
             escOverlayShown ? hideESCOverlay() : showESCOverlay();
         } else {
             if (isTyping || escOverlayShown) return;
             const code = KEY_TO_OPCODE[key];
             if (code !== undefined) wsSend(code);
-            if (key == 'w') macroIntervalID = setInterval(() => wsSend(code), macroCooldown);
-            if (key == 'q') minionControlled = !minionControlled;
+            if (key === 'w') macroIntervalID = setInterval(() => wsSend(code), macroCooldown);
+            if (key === 'q') minionControlled = !minionControlled;
         }
     }
     function keyup(event) {
         const key = processKey(event);
         if (Object.hasOwnProperty.call(pressed, key)) pressed[key] = false;
-        if (key == 'q') wsSend(UINT8_CACHE[19]);
-        else if (key == 'w') clearInterval(macroIntervalID);
+        if (key === 'q') wsSend(UINT8_CACHE[19]);
+        else if (key === 'w') clearInterval(macroIntervalID);
     }
     function handleScroll(event) {
         if (event.target !== mainCanvas) return;
@@ -1727,9 +1727,9 @@
                 touched = true;
                 mobileStuff.show();
             }
-            if (event.target.id == 'splitBtn') {
+            if (event.target.id === 'splitBtn') {
                 wsSend(UINT8_CACHE[17]);
-            } else if (event.target.id == 'ejectBtn') {
+            } else if (event.target.id === 'ejectBtn') {
                 wsSend(UINT8_CACHE[21]);
             } else {
                 touchmove(event);
@@ -1757,7 +1757,7 @@
         Logger.info(`Init done in ${Date.now() - LOAD_START}ms`);
     }
     window.setserver = (url) => {
-        if (url == wsUrl && ws && ws.readyState <= WebSocket.OPEN) return;
+        if (url === wsUrl && ws && ws.readyState <= WebSocket.OPEN) return;
         wsInit(url);
     };
     window.spectate = (/* a */) => {
@@ -1771,7 +1771,7 @@
         byId('gallery').hide();
     };
     window.openSkinsList = () => {
-        if (byId('gallery-body').innerHTML == '') buildGallery();
+        if (byId('gallery-body').innerHTML === '') buildGallery();
         byId('gallery').show(0.5);
     };
     window.addEventListener('DOMContentLoaded', init);

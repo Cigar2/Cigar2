@@ -2,7 +2,7 @@
 Protocol 6 Agar.io client for private servers
 
 ### Getting support | Discord server
-If you need extra help with anything you should ask it in the [Agar.io Private Servers Discord](https://discord.gg/66X2ESb) and not in issues.
+If you need extra help with anything you should ask it in the [Agar.io Private Servers Discord](https://discord.gg/CfvdZZrCKE) and not in issues.
 
 ### Adding servers
 Locate the select element in the index.html and add new entries, make sure to only have one option with `selected`

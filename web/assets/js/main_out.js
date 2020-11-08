@@ -63,13 +63,13 @@
             if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
             if (hex.length !== 6) throw new Error(`Invalid color ${color}`);
             const v = parseInt(hex, 16);
-            return new Color(v >>> 16 & 255, v >>> 8 & 255, v & 255, hex);
+            return new Color(v >>> 16 & 255, v >>> 8 & 255, v & 255, `#${hex}`);
         }
         constructor(r, g, b, hex) {
             this.r = r;
             this.g = g;
             this.b = b;
-            if (hex) this.hexCache = hex;
+            this.hexCache = hex;
         }
         clone() {
             return new Color(this.r, this.g, this.b);
@@ -89,7 +89,7 @@
             return this.clone().darken(grade);
         }
     }
-    
+
     function cleanupObject(object) {
         for (const i in object) delete object[i];
     }
@@ -485,8 +485,8 @@
                 const rawName = reader.getStringUTF8();
                 const message = reader.getStringUTF8();
 
-                let name = Cell.parseName(rawName).name || EMPTY_NAME
-                
+                let name = Cell.parseName(rawName).name || EMPTY_NAME;
+
                 if (flags.server && name !== 'SERVER') name = `[SERVER] ${name}`;
                 if (flags.admin) name = `[ADMIN] ${name}`;
                 if (flags.mod) name = `[MOD] ${name}`;
@@ -676,14 +676,12 @@
     const eatSound = new Sound('./assets/sound/eat.mp3', 0.5, 10);
     const pelletSound = new Sound('./assets/sound/pellet.mp3', 0.5, 10);
 
-    request('skinList.txt', (data) => {
+    fetch('skinList.txt').then(resp => resp.text()).then(data => {
         const skins = data.split(',').filter(name => name.length > 0);
         if (skins.length === 0) return;
         byId('gallery-btn').style.display = 'inline-block';
         const stamp = Date.now();
-        for (let i = 0; i < skins.length; i++) {
-            knownSkins.set(skins[i], stamp);
-        }
+        for (const skin of skins) knownSkins.set(skin, stamp);
         for (const i of knownSkins.keys()) {
             if (knownSkins.get(i) !== stamp) knownSkins.delete(i);
         }
@@ -719,9 +717,7 @@
         function simpleAssignListen(id, elm, prop) {
             if (settings[id] !== '') elm[prop] = settings[id];
             elm.addEventListener('change', () => {
-                requestAnimationFrame(() => {
-                    settings[id] = elm[prop];
-                });
+                settings[id] = elm[prop];
             });
         }
         switch (elm.tagName.toLowerCase()) {
@@ -756,23 +752,13 @@
         localStorage.setItem('settings', JSON.stringify(settings));
     }
 
-    function request(url, callback, method, type) {
-        if (!method) method = 'GET';
-        if (!type) type = 'text';
-        const req = new XMLHttpRequest();
-        req.onload = () => callback(req.response);
-        req.open(method, url);
-        req.responseType = type;
-        req.send();
-    }
-
     function buildGallery() {
         const sortedSkins = Array.from(knownSkins.keys()).sort();
         let c = '';
-        for (let i = 0; i < sortedSkins.length; i++) {
-            c += `<li class="skin" onclick="changeSkin('${sortedSkins[i]}')">`;
-            c += `<img class="circular" src="./skins/${sortedSkins[i]}.png">`;
-            c += `<h4 class="skinName">${sortedSkins[i]}</h4>`;
+        for (const skin of sortedSkins) {
+            c += `<li class="skin" onclick="changeSkin('${skin}')">`;
+            c += `<img class="circular" src="./skins/${skin}.png">`;
+            c += `<h4 class="skinName">${skin}</h4>`;
             c += '</li>';
         }
         byId('gallery-body').innerHTML = `<ul id="skinsUL">${c}</ul>`;
@@ -831,16 +817,17 @@
         const canvas = stats.canvas;
         const ctx = canvas.getContext('2d');
         ctx.font = '14px Ubuntu';
+        const uptime = prettyPrintTime(stats.info.uptime);
         const rows = [
             `${stats.info.name}' (${stats.info.mode})`,
             `${stats.info.playersTotal} / ${stats.info.playersLimit} players`,
             `${stats.info.playersAlive} playing`,
             `${stats.info.playersSpect} spectating`,
-            `${(stats.info.update * 2.5).toFixed(1)}% load @ ${prettyPrintTime(stats.info.uptime)}`,
+            `${(stats.info.update * 2.5).toFixed(1)}% load @ ${uptime}`,
         ];
         let width = 0;
-        for (let i = 0; i < rows.length; i++) {
-            width = Math.max(width, 2 + ctx.measureText(rows[i]).width + 2);
+        for (const row of rows) {
+            width = Math.max(width, 2 + ctx.measureText(row).width + 2);
         }
         canvas.width = width;
         canvas.height = rows.length * (14 + 2);
@@ -928,7 +915,7 @@
                     text = leaderboard.items[i].name,
                     isMe = leaderboard.items[i].me;
                 }
-                if (leaderboard.type === 'ffa') text = `${(i + 1)}. ${text}`;
+                if (leaderboard.type === 'ffa') text = `${i + 1}. ${text}`;
                 ctx.fillStyle = isMe ? '#FAA' : '#FFF';
                 const width = ctx.measureText(text).width;
                 const start = width > 200 ? 2 : 100 - width * 0.5;
@@ -1038,9 +1025,9 @@
 
         mainCtx.beginPath();
         if (cells.mine.length) {
-            for (let i = 0; i < cells.mine.length; i++) {
-                const cell = cells.byId.get(cells.mine[i]);
-                if (!cell) return;
+            for (const id of cells.mine) {
+                const cell = cells.byId.get(id);
+                if (!cell) continue;
                 mainCtx.fillStyle = cell.color.toHex(); // repeat assignment of same color is OK
                 const x = beginX + (cell.x + halfWidth) * xScale;
                 const y = beginY + (cell.y + halfHeight) * yScale;
@@ -1055,13 +1042,8 @@
         mainCtx.fill();
 
         // draw name above user's pos if they have a cell on the screen
-        let cell = null;
-        for (let i = 0, l = cells.mine.length; i < l; i++)
-            if (cells.byId.has(cells.mine[i])) {
-                cell = cells.byId.get(cells.mine[i]);
-                break;
-            }
-        if (cell !== null) {
+        const cell = cells.byId.get(cells.mine.find(id => cells.byId.has(id)));
+        if (cell) {
             mainCtx.fillStyle = settings.darkTheme ? '#DDD' : '#222';
             mainCtx.font = `${sectorNameSize}px Ubuntu`;
             mainCtx.fillText(cell.name || EMPTY_NAME, myPosX, myPosY - 7 - sectorNameSize / 2);
@@ -1090,14 +1072,11 @@
         syncAppStamp = Date.now();
 
         const drawList = cells.list.slice(0).sort(cellSort);
-        for (let i = 0, l = drawList.length; i < l; i++) {
-            drawList[i].update(syncAppStamp);
-        }
+        for (const cell of drawList) cell.update(syncAppStamp);
         cameraUpdate();
         if (settings.jellyPhysics) {
             updateQuadtree();
-            for (let i = 0, l = drawList.length; i < l; ++i) {
-                const cell = drawList[i];
+            for (const cell of drawList) {
                 cell.updateNumPoints();
                 cell.movePoints();
             }
@@ -1114,9 +1093,7 @@
         toCamera(mainCtx);
         drawBorders();
 
-        for (let i = 0, l = drawList.length; i < l; i++) {
-            drawList[i].draw(mainCtx);
-        }
+        for (const cell of drawList) cell.draw(mainCtx);
 
         fromCamera(mainCtx);
         quadtree = null;
@@ -1179,18 +1156,16 @@
 
     function cameraUpdate() {
         const myCells = [];
-        for (let i = 0; i < cells.mine.length; i++) {
-            if (cells.byId.has(cells.mine[i])) {
-                myCells.push(cells.byId.get(cells.mine[i]));
-            }
+        for (const id of cells.mine) {
+            const cell = cells.byId.get(id);
+            if (cell) myCells.push(cell);
         }
         if (myCells.length > 0) {
             let x = 0;
             let y = 0;
             let s = 0;
             let score = 0;
-            for (let i = 0; i < myCells.length; i++) {
-                const cell = myCells[i];
+            for (const cell of myCells) {
                 score += ~~(cell.ns * cell.ns / 100);
                 x += cell.x;
                 y += cell.y;
@@ -1222,19 +1197,17 @@
         const x = (camera.x - w / 2);
         const y = (camera.y - h / 2);
         quadtree = new window.PointQuadTree(x, y, w, h, QUADTREE_MAX_POINTS);
-        for (let i = 0; i < cells.list.length; ++i) {
-            const cell = cells.list[i];
-            for (let j = 0; j < cell.points.length; ++j) {
-                quadtree.insert(cell.points[j]);
-            }
+        for (const cell of cells.list) {
+            for (const point of cell.points) quadtree.insert(point);
         }
     }
 
     class Cell {
         static parseName(value) { // static method
-            const [, skin, name] = /^(?:\{([^}]*)\})?([^]*)/.exec(value || '');
+            let [, skin, name] = /^(?:\<([^}]*)\>)?([^]*)/.exec(value || '');
+            name = name.trim();
             return {
-                name: name.trim(),
+                name: name,
                 skin: (skin || '').trim() || name,
             };
         }
@@ -1243,7 +1216,6 @@
             this.diedBy = 0;
             this.nameSize = 0;
             this.drawNameSize = 0;
-            this.jagged = false;
             this.updated = null;
             this.dead = null;
             this.id = id;
@@ -1278,11 +1250,12 @@
         update(relativeTime) {
             const prevFrameSize = this.s;
             const dt = Math.max(Math.min((relativeTime - this.updated) / 120, 1), 0);
+            let diedBy;
             if (this.destroyed && Date.now() > this.dead + 200) {
                 cells.list.remove(this);
-            } else if (this.diedBy && cells.byId.has(this.diedBy)) {
-                this.nx = cells.byId.get(this.diedBy).x;
-                this.ny = cells.byId.get(this.diedBy).y;
+            } else if (this.diedBy && (diedBy = cells.byId.get(this.diedBy))) {
+                this.nx = diedBy.x;
+                this.ny = diedBy.y;
             }
             this.x = this.ox + (this.nx - this.ox) * dt;
             this.y = this.oy + (this.ny - this.oy) * dt;
@@ -1291,11 +1264,9 @@
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
 
             if (settings.jellyPhysics && this.points.length) {
-                if (this.ns === this.os) return;
                 const ratio = this.s / prevFrameSize;
-                if (ratio === 1) return;
-                for (let i = 0; i < this.points.length; ++i) {
-                    this.points[i].rl *= ratio;
+                if (this.ns != this.os && ratio != 1) {
+                    for (const point of this.points) point.rl *= ratio;
                 }
             }
         }
@@ -1355,8 +1326,7 @@
                     affected = true;
                 }
                 if (affected) {
-                    this.pointsVel[i] = Math.min(this.pointsVel[i], 0);
-                    this.pointsVel[i] -= 1;
+                    this.pointsVel[i] = Math.min(this.pointsVel[i], 0) - 1;
                 }
                 curRl += this.pointsVel[i];
                 curRl = Math.max(curRl, 0);
@@ -1372,10 +1342,10 @@
                 curP.y = this.y + Math.sin(angle) * rl;
             }
         }
-        setName(name) {
-            const nameAndSkin = Cell.parseName(name);
-            this.name = nameAndSkin.name;
-            this.setSkin(nameAndSkin.skin);
+        setName(rawName) {
+            const {name, skin} = Cell.parseName(rawName);
+            this.name = name;
+            this.setSkin(skin);
         }
         setSkin(value) {
             this.skin = (value && value[0] === '%' ? value.slice(1) : value) || this.skin;
@@ -1413,10 +1383,7 @@
             if (settings.jellyPhysics && this.points.length) {
                 const point = this.points[0];
                 ctx.moveTo(point.x, point.y);
-                for (let i = 0; i < this.points.length; ++i) {
-                    const point = this.points[i];
-                    ctx.lineTo(point.x, point.y);
-                }
+                for (const point of this.points) ctx.lineTo(point.x, point.y);
             } else if (this.jagged) {
                 const pointCount = 120;
                 const incremental = PI_2 / pointCount;
@@ -1465,7 +1432,9 @@
             }
             if (settings.showMass && (cells.mine.indexOf(this.id) !== -1 || cells.mine.length === 0)) {
                 const mass = (~~(this.s * this.s / 100)).toString();
-                const y = this.y + (this.name && settings.showNames ? Math.max(this.s / 4.5, this.nameSize / 1.5) : 0);
+                let y = this.y;
+                if (this.name && settings.showNames)
+                    y += Math.max(this.s / 4.5, this.nameSize / 1.5);
                 drawText(ctx, true, this.x, y, this.nameSize / 2, this.drawNameSize / 2, mass);
             }
         }
@@ -1668,11 +1637,8 @@
         window.addEventListener('beforeunload', storeSettings);
         document.addEventListener('wheel', handleScroll, {passive: true});
         byId('play-btn').addEventListener('click', () => {
-            if (settings.skin) {
-                sendPlay(`<${settings.skin}>${settings.nick}`);
-            } else {
-                sendPlay(settings.nick);
-            }
+            const skin = settings.skin;
+            sendPlay((skin ? `<${skin}>` : '') + settings.nick);
             hideESCOverlay();
         });
         window.onkeydown = keydown;

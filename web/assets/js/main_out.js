@@ -819,7 +819,7 @@
         ctx.font = '14px Ubuntu';
         const uptime = prettyPrintTime(stats.info.uptime);
         const rows = [
-            `${stats.info.name}' (${stats.info.mode})`,
+            `${stats.info.name} (${stats.info.mode})`,
             `${stats.info.playersTotal} / ${stats.info.playersLimit} players`,
             `${stats.info.playersAlive} playing`,
             `${stats.info.playersSpect} spectating`,

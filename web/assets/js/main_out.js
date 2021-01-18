@@ -242,9 +242,6 @@
         254: new Uint8Array([254]),
     };
     const KEY_TO_OPCODE = {
-        ' ': UINT8_CACHE[17],
-        w: UINT8_CACHE[21],
-        q: UINT8_CACHE[18],
         e: UINT8_CACHE[22],
         r: UINT8_CACHE[23],
         t: UINT8_CACHE[24],
@@ -1607,17 +1604,25 @@
             escOverlayShown ? hideESCOverlay() : showESCOverlay();
         } else {
             if (isTyping || escOverlayShown) return;
-            const code = KEY_TO_OPCODE[key];
+            let code = KEY_TO_OPCODE[key];
             if (code !== undefined) wsSend(code);
-            if (key === 'w') macroIntervalID = setInterval(() => wsSend(code), macroCooldown);
-            if (key === 'q') minionControlled = !minionControlled;
+            if (key === 'w') {
+                code = UINT8_CACHE[minionControlled ? 23 : 21];
+                macroIntervalID = setInterval(() => wsSend(code), macroCooldown);
+                wsSend(code);
+            }
+            if (key === ' ')
+                wsSend(UINT8_CACHE[minionControlled ? 22 : 17]);
+            if (key === 'q') {
+                wsSend(UINT8_CACHE[18]);
+                minionControlled = !minionControlled;
+            }
         }
     }
     function keyup(event) {
         const key = processKey(event);
         if (Object.hasOwnProperty.call(pressed, key)) pressed[key] = false;
-        if (key === 'q') wsSend(UINT8_CACHE[19]);
-        else if (key === 'w') clearInterval(macroIntervalID);
+        if (key === 'w') clearInterval(macroIntervalID);
     }
     function handleScroll(event) {
         if (event.target !== mainCanvas) return;

@@ -277,7 +277,7 @@
         }
         byId('connecting').show(0.5);
         wsUrl = url;
-        regexUrl = /^\w[ws]+/;
+        let regexUrl = /^\w[ws]+/;
         let a = wsUrl.match(regexUrl)? wsUrl : `ws${USE_HTTPS ? 's' : ''}://${url}`;
         ws = new WebSocket(a);
         ws.binaryType = 'arraybuffer';

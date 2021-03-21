@@ -1259,13 +1259,6 @@
             this.s = this.os + (this.ns - this.os) * dt;
             this.nameSize = ~~(~~(Math.max(~~(0.3 * this.ns), 24)) / 3) * 3;
             this.drawNameSize = ~~(~~(Math.max(~~(0.3 * this.s), 24)) / 3) * 3;
-
-            if (settings.jellyPhysics && this.points.length) {
-                const ratio = this.s / prevFrameSize;
-                if (this.ns != this.os && ratio != 1) {
-                    for (const point of this.points) point.rl *= ratio;
-                }
-            }
         }
         updateNumPoints() {
             let numPoints = Math.min(Math.max(this.s * camera.scale | 0, CELL_POINTS_MIN), CELL_POINTS_MAX);
@@ -1374,13 +1367,18 @@
             if (this.s > 20) {
                 this.s -= ctx.lineWidth / 2;
             }
+            let ratio = 0;
 
             ctx.beginPath();
             if (this.jagged) ctx.lineJoin = 'miter';
             if (settings.jellyPhysics && this.points.length) {
-                const point = this.points[0];
+                let point = this.points[0];
                 ctx.moveTo(point.x, point.y);
-                for (const point of this.points) ctx.lineTo(point.x, point.y);
+                for (let s = 0; s < this.points.length; ++s) {
+                    let point = this.points[s];
+                    ctx.lineTo(point.x, point.y);
+                    if(this.points[s].rl > ratio) ratio = this.points[s].rl;
+                }
             } else if (this.jagged) {
                 const pointCount = 120;
                 const incremental = PI_2 / pointCount;
@@ -1409,10 +1407,13 @@
             if (settings.showSkins && this.skin && skinImage &&
                 skinImage.complete && skinImage.width && skinImage.height) {
                 if (settings.fillSkin) ctx.fill();
-                ctx.save(); // for the clip
+                ctx.save();
                 ctx.clip();
-                ctx.drawImage(skinImage, this.x - this.s, this.y - this.s,
-                    this.s * 2, this.s * 2);
+                scaleBack(ctx);
+                let smoothness = (this.s > ratio ? this.s : ratio);
+                let sizeScale =  (settings.jellyPhysics ? smoothness : this.s) * camera.scale;
+                ctx.drawImage(skinImage, this.x * camera.scale - sizeScale, this.y * camera.scale - sizeScale, sizeScale *= 2, sizeScale);
+                scaleForth(ctx);
                 ctx.restore();
             } else {
                 ctx.fill();

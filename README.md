@@ -21,4 +21,4 @@ Check out [issue 1](https://github.com/Cigar2/Cigar2/issues/1)
 
 ### Getting started
 
-Clone this repository using Git, and then `cd Cigar2`, `npm i`, and `npm start`.
+Clone this repository using Git, and then `cd Cigar2`, `npm i`, and `npm start`. Cigar2 will then start on `localhost:3000`.

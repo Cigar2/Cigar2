@@ -1201,7 +1201,7 @@
 
     class Cell {
         static parseName(value) { // static method
-            let [, skin, name] = /^(?:\<([^}]*)\>)?([^]*)/.exec(value || '');
+            let [, skin, name] = /^(?:<([^}]*)>)?([^]*)/.exec(value || '');
             name = name.trim();
             return {
                 name: name,

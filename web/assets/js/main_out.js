@@ -220,7 +220,6 @@
 
     const WEBSOCKET_URL = null;
     const SKIN_URL = './skins/';
-    const USE_HTTPS = 'https:' === window.location.protocol;
     const EMPTY_NAME = 'An unnamed cell';
     const QUADTREE_MAX_POINTS = 32;
     const CELL_POINTS_MIN = 5;
@@ -277,7 +276,7 @@
         }
         byId('connecting').show(0.5);
         wsUrl = url;
-        ws = new WebSocket(`ws${USE_HTTPS ? 's' : ''}://${url}`);
+        ws = new WebSocket(url);
         ws.binaryType = 'arraybuffer';
         ws.onopen = wsOpen;
         ws.onmessage = wsMessage;

@@ -10,13 +10,15 @@
     "express": "^4.16.4"
   },
   "engines": {
-    "node": "8.x"
+    "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "repository": {
     "url": "https://github.com/Cigar2/Cigar2"
   },
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^7.12.1"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0"
   }
 }

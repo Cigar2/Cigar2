@@ -331,7 +331,7 @@
                 }
 
                 // update records
-                // eslint-disable-next-line no-constant-condition
+                 
                 while (true) {
                     const id = reader.getUint32();
                     if (id === 0) break;
